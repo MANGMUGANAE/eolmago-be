@@ -1,0 +1,12 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import: optional:file:.env[.properties]
+
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_DEV_URL}
+    username: ${DB_DEV_USERNAME}
+    password: ${DB_DEV_PASSWORD}
