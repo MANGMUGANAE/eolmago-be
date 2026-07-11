@@ -1,12 +1,11 @@
 spring:
   config:
     activate:
-      on-profile: dev
+      on-profile: prod
     import: optional:file:.env[.properties]
-
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${DB_PROD_URL}
-    username: ${DB_PRDO_USERNAME}
+    username: ${DB_PROD_USERNAME}
     password: ${DB_PROD_PASSWORD}
