@@ -30,7 +30,8 @@ public class UserController {
     List<User> response = List.of(
         User.of(1L, "리서영"),
         User.of(2L, "홍명보"),
-        User.of(3L, "홍당무")
+        User.of(3L, "홍당무"),
+        User.of(4L, "승빈짱")
     );
 
     return ResponseDTO.of(response, "조회에 성공하셨습니다.");
