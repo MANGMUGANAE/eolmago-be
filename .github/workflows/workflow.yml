@@ -64,5 +64,8 @@ jobs:
             source .env
             set +a
             
+            echo "==== 환경변수 등록 확인 ======"
+            env | grep DB
+            
             SPRING_PROFILES_ACTIVE=prod nohup java -jar eolmago.jar > ./output.log 2>&1 &
             rm -rf /home/ubuntu/eolmago/tobe
