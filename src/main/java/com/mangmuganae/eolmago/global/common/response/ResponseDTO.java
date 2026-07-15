@@ -11,7 +11,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-
 public class ResponseDTO<T> {
 
   private LocalDateTime localDateTime;

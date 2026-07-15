@@ -58,5 +58,11 @@ jobs:
             cd /home/ubuntu/eolmago/current
             chmod 600 .env
             sudo fuser -k -n tcp 8080 || true
-            sudo SPRING_PROFILES_ACTIVE=prod nohup java -jar eolmago.jar > ./output.log 2>&1 &
+            
+            sleep 2
+            set -a
+            source .env
+            set +a
+            
+            SPRING_PROFILES_ACTIVE=prod nohup java -jar eolmago.jar > ./output.log 2>&1 &
             rm -rf /home/ubuntu/eolmago/tobe
