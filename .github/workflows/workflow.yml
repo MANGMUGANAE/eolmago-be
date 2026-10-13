@@ -51,21 +51,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
+            sudo systemctl stop eolmago || true
             sudo rm -rf /home/ubuntu/eolmago/current
             mkdir -p /home/ubuntu/eolmago/current
             mv /home/ubuntu/eolmago/tobe/eolmago.jar /home/ubuntu/eolmago/current/eolmago.jar
             mv /home/ubuntu/eolmago/tobe/.env /home/ubuntu/eolmago/current/.env
-            cd /home/ubuntu/eolmago/current
-            chmod 600 .env
-            sudo fuser -k -n tcp 8080 || true
-            
-            sleep 2
-            set -a
-            source .env
-            set +a
-            
-            echo "==== 환경변수 등록 확인 ======"
-            env | grep DB
-            
-            SPRING_PROFILES_ACTIVE=prod nohup java -jar eolmago.jar > ./output.log 2>&1 &
+            chmod 600 /home/ubuntu/eolmago/current/.env
+            sudo systemctl start eolmago
             rm -rf /home/ubuntu/eolmago/tobe
