@@ -5,7 +5,6 @@ import com.mangmuganae.eolmago.domain.user.repository.UserRepository;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

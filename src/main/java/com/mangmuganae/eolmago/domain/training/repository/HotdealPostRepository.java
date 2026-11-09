@@ -1,0 +1,82 @@
+package com.mangmuganae.eolmago.domain.training.repository;
+
+import com.mangmuganae.eolmago.domain.training.entity.HotdealPost;
+import com.mangmuganae.eolmago.domain.training.entity.HotdealPostRowMapper;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class HotdealPostRepository {
+
+  private final JdbcTemplate jdbcTemplate;
+  private final RowMapper<HotdealPost> hotdealPostRowMapper = new HotdealPostRowMapper();
+
+  public HotdealPostRepository(JdbcTemplate jdbcTemplate) {
+    this.jdbcTemplate = jdbcTemplate;
+  }
+
+  public Optional<HotdealPost> findById(Long id) {
+    String sql = "select * from hotdeal_post where id = ?";
+    return jdbcTemplate.query(sql, hotdealPostRowMapper, id)
+        .stream()
+        .findFirst();
+  }
+
+  public boolean existsByContentHash(String contentHash) {
+    String sql = "select count(*) from hotdeal_post where content_hash = ?";
+    Integer count = jdbcTemplate.queryForObject(sql, Integer.class, contentHash);
+    return count != null && count > 0;
+  }
+
+  public List<HotdealPost> findByStatusAndKeyword(String status, String keyword) {
+    String sql = "select * from hotdeal_post where status = ? "
+        + "and (title like ? or content like ?) order by created_at desc";
+    String likeKeyword = "%" + keyword + "%";
+    return jdbcTemplate.query(sql, hotdealPostRowMapper, status, likeKeyword, likeKeyword);
+  }
+
+  public List<HotdealPost> findLabeledForExport() {
+    String sql = "select * from hotdeal_post where status = 'COMPLETED' "
+        + "and final_label in (0, 1) order by id";
+    return jdbcTemplate.query(sql, hotdealPostRowMapper);
+  }
+
+  public HotdealPost save(String title, String content, String contentHash) {
+    String sql = "insert into hotdeal_post (title, content, content_hash, status, created_at) "
+        + "values (?, ?, ?, 'PENDING', now())";
+    KeyHolder keyHolder = new GeneratedKeyHolder();
+    jdbcTemplate.update(connection -> {
+      PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+      ps.setString(1, title);
+      ps.setString(2, content);
+      ps.setString(3, contentHash);
+      return ps;
+    }, keyHolder);
+
+    Long id = keyHolder.getKey().longValue();
+    return findById(id).orElseThrow();
+  }
+
+  public void finalizeLabel(Long id, int finalLabel) {
+    String sql = "update hotdeal_post set final_label = ?, status = 'COMPLETED' where id = ?";
+    jdbcTemplate.update(sql, finalLabel, id);
+  }
+
+  public void revertToPending(Long id) {
+    String sql = "update hotdeal_post set final_label = null, status = 'PENDING' where id = ?";
+    jdbcTemplate.update(sql, id);
+  }
+
+  public void deleteById(Long id) {
+    String sql = "delete from hotdeal_post where id = ?";
+    jdbcTemplate.update(sql, id);
+  }
+
+}

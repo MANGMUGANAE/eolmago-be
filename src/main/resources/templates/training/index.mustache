@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>핫딜글 라벨링</title>
+<style>
+  :root {
+    --primary: #FF6600;
+    --primary-pressed: #E14D00;
+    --primary-contrast: #FFFFFF;
+    --primary-weak: #FFF2EC;
+    --bg: #FFFFFF;
+    --layer: #FFFFFF;
+    --fill: #F7F8F9;
+    --text: #1A1C20;
+    --text-muted: #555D6D;
+    --text-subtle: #868B94;
+    --placeholder: #B0B3BA;
+    --border-weak: #DCDEE3;
+    --border-subtle: rgba(0,0,0,0.047);
+    --positive: #079171;
+    --positive-weak: #EDFAF6;
+    --critical: #FA342C;
+    --critical-weak: #FDF0F0;
+    --warning: #D4AB28;
+    --warning-solid: #FBDC65;
+    --focus-ring: #5E98FE;
+    --overlay: rgba(0,0,0,0.455);
+    --inverted-bg: #2A3038;
+    --inverted-text: #FFFFFF;
+    --shadow-1: 0px 1px 4px 0px rgba(0,0,0,0.078);
+    --shadow-3: 0px 4px 16px 0px rgba(0,0,0,0.122);
+    --radius-pill: 9999px;
+    --ease: cubic-bezier(0.35,0,0.35,1);
+    --ease-enter: cubic-bezier(0,0,0.15,1);
+    --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); height: 100%; }
+  body {
+    font-family: var(--font);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; }
+  button:active { opacity: 0.85; }
+  .hidden { display: none !important; }
+
+  /* ===== Login ===== */
+  .login-wrap {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    background: var(--bg);
+  }
+  .login-card { width: 100%; max-width: 320px; }
+  .login-card h1 { font-size: 22px; line-height: 30px; font-weight: 700; margin: 0 0 28px; }
+  .field { margin-bottom: 14px; }
+  .field-label { display: block; font-size: 13px; line-height: 18px; font-weight: 700; color: var(--text-subtle); margin-bottom: 6px; }
+  .field-input, .field-textarea, .field-select {
+    width: 100%; padding: 13px 14px; background: var(--fill); color: var(--text);
+    border: 1px solid transparent; border-radius: 12px; font-size: 15px; outline: none;
+    transition: border-color 150ms var(--ease), box-shadow 150ms var(--ease);
+  }
+  .field-input::placeholder, .field-textarea::placeholder { color: var(--placeholder); }
+  .field-input:focus, .field-textarea:focus, .field-select:focus {
+    border-color: var(--focus-ring); box-shadow: 0 0 0 3px rgba(94,152,254,0.3);
+  }
+  .field-textarea { resize: vertical; min-height: 64px; }
+
+  .action-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 14px 20px; border: none; border-radius: var(--radius-pill);
+    font-size: 15px; line-height: 20px; font-weight: 700;
+    transition: background 150ms var(--ease), color 150ms var(--ease), opacity 150ms var(--ease);
+  }
+  .action-btn.full { width: 100%; }
+  .action-btn.primary { background: var(--primary); color: var(--primary-contrast); }
+  .action-btn.primary:hover { background: var(--primary-pressed); }
+  .action-btn.secondary { background: var(--fill); color: var(--text); }
+  .action-btn.critical-weak { background: var(--critical-weak); color: var(--critical); }
+
+  /* ===== App shell (sidebar dashboard layout) ===== */
+  .shell { display: flex; min-height: 100vh; align-items: stretch; }
+
+  .sidebar {
+    width: 240px; flex-shrink: 0;
+    background: var(--layer); border-right: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column;
+    padding: 24px 14px; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .sidebar-header { font-size: 17px; font-weight: 700; padding: 0 10px; margin-bottom: 18px; }
+  .sidebar-content { display: flex; flex-direction: column; gap: 4px; }
+  .sidebar-footer { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 12px 12px; border-radius: 12px; border: none; background: transparent;
+    font-size: 14px; line-height: 19px; font-weight: 700; color: var(--text-subtle);
+    transition: background 150ms var(--ease), color 150ms var(--ease);
+  }
+  .nav-item:hover { background: var(--fill); }
+  .nav-item.active { background: var(--primary-weak); color: var(--primary); }
+  .nav-item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); opacity: 0; }
+  .nav-item.active .dot { opacity: 1; }
+
+  .main { flex: 1; min-width: 0; }
+
+  .pill-tag { font-size: 12px; line-height: 16px; font-weight: 700; padding: 5px 12px; border-radius: var(--radius-pill); background: var(--fill); color: var(--text); display: inline-block; }
+  .pill-tag b { color: var(--primary); }
+  .link-btn { background: none; border: none; color: var(--text-muted); font-size: 13px; line-height: 18px; font-weight: 700; padding: 0; text-align: left; }
+  .link-btn.brand { color: var(--primary); }
+
+  .page-title { font-size: 20px; line-height: 27px; font-weight: 700; margin: 0 0 20px; }
+  .page-body { padding: 24px 28px 48px; max-width: 1040px; width: 100%; }
+
+  .search-field { position: relative; margin-bottom: 18px; max-width: 360px; }
+  .search-field input {
+    width: 100%; padding: 12px 14px; background: var(--fill); color: var(--text);
+    border: 1px solid transparent; border-radius: 12px; font-size: 14px; outline: none;
+    transition: border-color 150ms var(--ease), box-shadow 150ms var(--ease);
+  }
+  .search-field input::placeholder { color: var(--placeholder); }
+  .search-field input:focus { border-color: var(--focus-ring); box-shadow: 0 0 0 3px rgba(94,152,254,0.3); }
+
+  /* ===== Post list (flat rows, no card chrome) ===== */
+  .post-grid { display: block; }
+  .post-card {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: transparent; border: none; border-bottom: 1px solid var(--border-subtle);
+    padding: 16px 4px; transition: background 150ms var(--ease);
+  }
+  .post-card:last-child { border-bottom: none; }
+  .post-card:hover { background: var(--fill); }
+  .post-card .row { display: flex; align-items: center; gap: 12px; }
+  .post-card .main-col { flex: 1; min-width: 0; }
+  .post-card .title { font-size: 15px; line-height: 20px; font-weight: 700; margin: 0 0 3px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .post-card .desc {
+    font-size: 13px; line-height: 18px; color: var(--text-subtle); margin: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .post-card .suffix { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+  .post-card .suffix .count { font-size: 12px; color: var(--text-subtle); }
+  .badge { font-size: 12px; line-height: 16px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
+  .badge.positive { background: var(--positive-weak); color: var(--positive); }
+  .badge.critical { background: var(--critical-weak); color: var(--critical); }
+  .badge.warning { background: var(--warning-solid); color: #1A1C20; }
+  .badge.brand { background: var(--primary); color: var(--primary-contrast); }
+
+  .empty-state { text-align: center; color: var(--text-subtle); padding: 64px 20px; font-size: 14px; line-height: 19px; }
+
+  /* ===== Upload ===== */
+  .accordion { background: var(--fill); border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; }
+  .accordion summary { font-weight: 700; font-size: 14px; line-height: 19px; cursor: pointer; color: var(--primary); list-style: none; }
+  .accordion summary::-webkit-details-marker { display: none; }
+  .accordion ol { margin: 12px 0 0; padding-left: 20px; font-size: 13px; line-height: 20px; color: var(--text); }
+  .accordion li + li { margin-top: 6px; }
+
+  .toolbar { display: inline-flex; width: fit-content; gap: 6px; align-items: center; margin-bottom: 16px; }
+
+  .upload-sticky-header {
+    position: sticky; top: 0; z-index: 6;
+    background: var(--bg); padding-top: 4px; margin-bottom: 4px;
+  }
+  .upload-sticky-header .accordion { margin-bottom: 12px; }
+  .upload-sticky-header .toolbar { margin-bottom: 12px; }
+
+  #section-upload { padding-bottom: 90px; }
+  .add-row-wrap { display: none; }
+  .add-row-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 10px 20px;
+    border: 1.5px dashed var(--border-weak); border-radius: 12px;
+    background: transparent; color: var(--text-subtle);
+    font-size: 14px; font-weight: 700;
+    transition: border-color 150ms var(--ease), color 150ms var(--ease), background 150ms var(--ease);
+  }
+  .add-row-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-weak); }
+  .add-row-icon { display: none; }
+
+  .add-placeholder {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 180px;
+    border: 1.5px dashed var(--border-weak); border-radius: 14px;
+    background: transparent; color: var(--text-subtle);
+    font-size: 28px; font-weight: 400;
+    transition: border-color 150ms var(--ease), color 150ms var(--ease), background 150ms var(--ease);
+  }
+  .add-placeholder:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-weak); }
+
+  .upload-submit-fixed {
+    position: fixed; right: 28px; bottom: 28px; z-index: 25;
+  }
+
+  .upload-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .upload-row { border: 1px solid var(--border-weak); border-radius: 14px; padding: 14px; background: var(--layer); }
+  .upload-row-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .upload-row-head input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--primary); }
+  .upload-row-head .index { font-size: 13px; line-height: 18px; color: var(--text-subtle); font-weight: 700; }
+  .remove-row-btn { margin-left: auto; background: none; border: none; color: var(--critical); font-size: 13px; line-height: 18px; font-weight: 700; }
+
+  .label-toggle { display: flex; gap: 6px; }
+  .toggle-btn {
+    flex: 1; padding: 9px 4px; border-radius: 10px; border: 1px solid var(--border-weak);
+    background: var(--layer); font-size: 12px; font-weight: 700; color: var(--text-subtle);
+    transition: background 150ms var(--ease), color 150ms var(--ease), border-color 150ms var(--ease);
+  }
+  .toggle-btn.active { border-color: transparent; }
+  .toggle-btn[data-value=""].active { background: var(--fill); color: var(--text); border-color: var(--border-weak); }
+  .toggle-btn[data-value="0"].active { background: var(--positive-weak); color: var(--positive); }
+  .toggle-btn[data-value="1"].active { background: var(--critical-weak); color: var(--critical); }
+  .toggle-btn[data-value="2"].active { background: var(--warning-solid); color: #1A1C20; }
+
+  /* ===== Side panel (detail) ===== */
+  .panel-backdrop {
+    position: fixed; inset: 0; background: var(--overlay); z-index: 100;
+    opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease);
+  }
+  .panel-backdrop.open { opacity: 1; pointer-events: auto; }
+  .side-panel {
+    position: fixed; top: 0; right: 0; height: 100vh;
+    width: min(440px, 100vw);
+    background: var(--bg); box-shadow: var(--shadow-3);
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 250ms var(--ease-enter);
+    z-index: 101;
+  }
+  .panel-backdrop.open .side-panel { transform: translateX(0); }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; flex-shrink: 0; border-bottom: 1px solid var(--border-subtle); }
+  .panel-header h3 { font-size: 16px; line-height: 22px; font-weight: 700; margin: 0; }
+  .panel-header button { background: none; border: none; font-size: 22px; line-height: 1; color: var(--text-subtle); padding: 4px; }
+  .panel-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  .panel-footer { padding: 14px 20px calc(16px + env(safe-area-inset-bottom)); flex-shrink: 0; border-top: 1px solid var(--border-subtle); }
+
+  .divider { border: none; border-top: 1px solid var(--border-subtle); margin: 16px 0; }
+
+  .pick-row { display: flex; gap: 8px; }
+  .pick-row button {
+    flex: 1; padding: 13px; border-radius: 12px; border: 1px solid var(--border-weak);
+    background: var(--layer); font-size: 14px; line-height: 19px; font-weight: 700; color: var(--text);
+    transition: border-color 150ms var(--ease), color 150ms var(--ease);
+  }
+  .pick-row button[data-label="0"]:hover { border-color: var(--positive); color: var(--positive); }
+  .pick-row button[data-label="1"]:hover { border-color: var(--critical); color: var(--critical); }
+  .pick-row button[data-label="2"]:hover { border-color: var(--warning); color: var(--warning); }
+
+  .eval-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); gap: 10px; }
+  .eval-row:last-child { border-bottom: none; }
+  .eval-row .name { font-size: 14px; line-height: 19px; font-weight: 700; flex-shrink: 0; margin-right: auto; }
+  .eval-pick { display: flex; gap: 5px; flex-shrink: 0; }
+  .eval-pick button {
+    padding: 6px 10px; border: 1px solid var(--border-weak); border-radius: 9px;
+    background: var(--layer); font-size: 12px; font-weight: 700; color: var(--text-subtle);
+    transition: background 150ms var(--ease), color 150ms var(--ease), border-color 150ms var(--ease);
+  }
+  .eval-pick button.active-pick { border-color: transparent; }
+  .eval-pick button[data-label="0"].active-pick { background: var(--positive-weak); color: var(--positive); }
+  .eval-pick button[data-label="1"].active-pick { background: var(--critical-weak); color: var(--critical); }
+  .eval-pick button[data-label="2"].active-pick { background: var(--warning-solid); color: #1A1C20; }
+  .eval-delete-btn {
+    flex-shrink: 0; background: none; border: none; color: var(--text-subtle);
+    font-size: 18px; line-height: 1; padding: 2px 4px;
+  }
+  .eval-delete-btn:hover { color: var(--critical); }
+
+  /* ===== Dialog (export data) ===== */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: var(--overlay); z-index: 110;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease);
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+  .modal {
+    width: 100%; max-width: 560px; max-height: 80vh;
+    background: var(--layer); border-radius: 20px; box-shadow: var(--shadow-3);
+    display: flex; flex-direction: column;
+    transform: scale(0.96); transition: transform 200ms var(--ease-enter);
+  }
+  .modal-backdrop.open .modal { transform: scale(1); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; flex-shrink: 0; border-bottom: 1px solid var(--border-subtle); }
+  .modal-header h3 { font-size: 16px; line-height: 22px; font-weight: 700; margin: 0; }
+  .modal-header button { background: none; border: none; font-size: 22px; line-height: 1; color: var(--text-subtle); padding: 4px; }
+  .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  .modal-body textarea {
+    width: 100%; height: 320px; resize: vertical;
+    background: var(--fill); color: var(--text); border: 1px solid var(--border-weak);
+    border-radius: 12px; padding: 12px; font-size: 13px; line-height: 18px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .modal-footer { padding: 14px 20px calc(16px + env(safe-area-inset-bottom)); flex-shrink: 0; border-top: 1px solid var(--border-subtle); }
+
+  /* ===== Snackbar ===== */
+  .snackbar {
+    position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    display: flex; align-items: center; gap: 8px;
+    background: var(--inverted-bg); color: var(--inverted-text);
+    padding: 12px 18px; border-radius: var(--radius-pill);
+    font-size: 14px; line-height: 19px; font-weight: 600; box-shadow: var(--shadow-3);
+    z-index: 200; opacity: 0; pointer-events: none;
+    transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+    max-width: 90vw;
+  }
+  .snackbar.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ===== Hamburger menu (mobile only) ===== */
+  .hamburger-btn { display: none; }
+
+  /* ===== Responsive: bottom tab bar + top-right menu under md ===== */
+  @media (max-width: 767px) {
+    .shell { flex-direction: column; }
+    .sidebar {
+      position: fixed; top: auto;
+      bottom: calc(28px + env(safe-area-inset-bottom)); left: 14px; right: 14px;
+      width: auto; height: auto;
+      flex-direction: row; align-items: stretch;
+      border: none; border-radius: var(--radius-pill);
+      box-shadow: var(--shadow-3);
+      padding: 6px; z-index: 20;
+    }
+    .sidebar-header { display: none; }
+    .sidebar-content { flex-direction: row; width: 100%; gap: 0; }
+    .nav-item {
+      flex: 1; flex-direction: column; gap: 3px; white-space: normal;
+      padding: 10px 4px; font-size: 11px; border-radius: var(--radius-pill);
+    }
+
+    .hamburger-btn {
+      display: flex; align-items: center; justify-content: center;
+      position: fixed; top: 16px; right: 16px; z-index: 30;
+      background: none; border: none; font-size: 26px; color: var(--text);
+      padding: 4px;
+    }
+    .sidebar-footer {
+      display: none; position: fixed; top: 60px; right: 14px; z-index: 30;
+      width: 220px; background: var(--layer); border: 1px solid var(--border-weak);
+      border-radius: 14px; box-shadow: var(--shadow-3); padding: 14px;
+      margin-top: 0; padding-top: 14px; border-top: 1px solid var(--border-weak);
+      flex-direction: column; gap: 10px;
+    }
+    .sidebar-footer.open { display: flex; }
+
+    .page-body { padding: 16px 16px calc(120px + env(safe-area-inset-bottom)); }
+    .side-panel { width: 100vw; }
+
+    .add-row-wrap { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+    .add-row-full { display: none; }
+    .add-row-icon { display: inline; }
+    .add-row-btn {
+      width: 44px; height: 44px; padding: 0; border-radius: 50%;
+      font-size: 22px; line-height: 1;
+    }
+    .add-placeholder { display: none; }
+
+    .upload-submit-fixed {
+      left: 14px; right: 14px; bottom: calc(96px + env(safe-area-inset-bottom));
+    }
+    .upload-submit-btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="view-login" class="login-wrap">
+  <div class="login-card">
+    <h1>핫딜글 라벨링</h1>
+    <div class="field">
+      <input id="loginName" class="field-input" type="text" placeholder="이름을 입력하세요" maxlength="20">
+    </div>
+    <div class="field">
+      <input id="loginPin" class="field-input" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 (숫자 4자리)">
+    </div>
+    <button class="action-btn primary full" onclick="App.login()">입장하기</button>
+  </div>
+</div>
+
+<div id="view-app" class="hidden shell">
+  <button id="menuToggle" class="hamburger-btn" onclick="App.toggleMobileMenu()">☰</button>
+
+  <nav class="sidebar">
+    <p class="sidebar-header">핫딜글 라벨링</p>
+    <div class="sidebar-content">
+      <button class="nav-item active" data-tab="PENDING" onclick="App.switchTab('PENDING')"></span>평가 진행중</button>
+      <button class="nav-item" data-tab="COMPLETED" onclick="App.switchTab('COMPLETED')"></span>평가 완료</button>
+      <button class="nav-item" data-tab="UPLOAD" onclick="App.switchTab('UPLOAD')"></span>업로드</button>
+    </div>
+    <div class="sidebar-footer">
+      <button class="link-btn brand" onclick="App.copyTrainingData()">출력</button>
+      <button class="link-btn" onclick="App.logout()">로그아웃</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-body">
+      <h2 id="sectionTitle" class="page-title">평가 진행중</h2>
+      <div id="section-list">
+        <div class="search-field">
+          <input id="searchInput" type="text" placeholder="검색" oninput="App.onSearch()">
+        </div>
+        <div id="labelFilter" class="label-toggle hidden" style="width:auto;margin-bottom:16px;" onclick="App.selectLabelFilter(event)">
+          <button type="button" class="toggle-btn active" data-value="">전체</button>
+          <button type="button" class="toggle-btn" data-value="0">정상글</button>
+          <button type="button" class="toggle-btn" data-value="1">광고글</button>
+          <button type="button" class="toggle-btn" data-value="2">애매함</button>
+        </div>
+        <div id="postGrid" class="post-grid"></div>
+      </div>
+
+      <div id="section-upload" class="hidden">
+        <div class="upload-sticky-header">
+          <details class="accordion" open>
+            <summary>판별 기준</summary>
+            <ol>
+              <li>판매 목적 홍보 문구가 있음 ("지금 바로", "선착순", "놓치지 마세요" 등)</li>
+              <li>시선 끌기용 특수기호·이모지 남발 (★, 【】, 🔥 반복)</li>
+              <li>잘 알려진 제품인데 특징이나 장점을 길게 소개함</li>
+              <li>가격 정보보다 제품 설명이 길거나 쓸데없는 사족이 많음</li>
+              <li>친구 추천 리워드, 추천인 코드, 외부 접속 유도 문구가 있음</li>
+              <li>카드, 주식, 보험, 예금 등 금융상품 광고글</li>
+            </ol>
+          </details>
+
+          <div class="toolbar">
+            <select id="bulkLabelSelect" class="field-select" style="width:auto;padding:6px 8px;font-size:13px;">
+              <option value="">선택</option>
+              <option value="0">정상</option>
+              <option value="1">광고</option>
+              <option value="2">애매</option>
+            </select>
+            <button class="action-btn primary" style="padding:6px 12px;font-size:13px;" onclick="App.applyBulkLabel()">일괄적용</button>
+          </div>
+        </div>
+
+        <div id="uploadRows" class="upload-grid"></div>
+
+        <div class="add-row-wrap">
+          <button class="add-row-btn" onclick="App.addUploadRow()">
+            <span class="add-row-full">+ 항목 추가</span>
+            <span class="add-row-icon">+</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-submit-fixed hidden" id="uploadSubmitFixed">
+      <button class="action-btn primary upload-submit-btn" onclick="App.submitUpload()">업로드하기</button>
+    </div>
+  </main>
+</div>
+
+<div id="detailOverlay" class="panel-backdrop hidden" onclick="App.onOverlayClick(event)">
+  <div class="side-panel">
+    <div class="panel-header">
+      <h3>평가글 상세</h3>
+      <button onclick="App.closeDetail()">&times;</button>
+    </div>
+    <div id="detailBody" class="panel-body"></div>
+    <div id="detailFooter" class="panel-footer"></div>
+  </div>
+</div>
+
+<div id="exportDialog" class="modal-backdrop hidden" onclick="App.onExportBackdropClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>학습 데이터</h3>
+      <button onclick="App.closeExportDialog()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="exportText" readonly></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="action-btn primary full" onclick="App.copyExportText()">복사하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="snackbar"><span>✓</span><span id="toastText"></span></div>
+
+<script>
+const App = (function () {
+
+  let currentTab = 'PENDING';
+  let currentEvaluator = null;
+  let currentDetailId = null;
+  let uploadRowSeq = 0;
+
+  const TAB_TITLES = { PENDING: '진행중', COMPLETED: '완료', UPLOAD: '업로드' };
+
+  function toast(message) {
+    document.getElementById('toastText').textContent = message;
+    const el = document.getElementById('toast');
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  async function api(url, options) {
+    const res = await fetch(url, Object.assign({
+      headers: { 'Content-Type': 'application/json' }
+    }, options));
+    return res.json();
+  }
+
+  function labelBadge(label) {
+    if (label === 0) return '<span class="badge positive">정상</span>';
+    if (label === 1) return '<span class="badge critical">광고</span>';
+    if (label === 2) return '<span class="badge warning">애매</span>';
+    return '';
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : str;
+    return div.innerHTML;
+  }
+
+  async function login() {
+    const name = document.getElementById('loginName').value.trim();
+    const pin = document.getElementById('loginPin').value.trim();
+    if (!name || !/^[0-9]{4}$/.test(pin)) {
+      toast('이름과 숫자 4자리를 입력해주세요.');
+      return;
+    }
+    const ok = await attemptLogin(name, pin);
+    if (ok) {
+      localStorage.setItem('evaluatorName', name);
+      localStorage.setItem('evaluatorPin', pin);
+    }
+  }
+
+  async function attemptLogin(name, pin) {
+    const json = await api('/training/api/login', { method: 'POST', body: JSON.stringify({ name, pin }) });
+    if (!json.data) {
+      toast(json.message || '로그인에 실패했습니다.');
+      return false;
+    }
+    currentEvaluator = json.data;
+    enterApp();
+    return true;
+  }
+
+  async function checkSession() {
+    const json = await api('/training/api/me');
+    if (json.data) {
+      currentEvaluator = json.data;
+      enterApp();
+      return;
+    }
+
+    const savedName = localStorage.getItem('evaluatorName');
+    const savedPin = localStorage.getItem('evaluatorPin');
+    if (savedName && savedPin) {
+      const ok = await attemptLogin(savedName, savedPin);
+      if (!ok) {
+        localStorage.removeItem('evaluatorName');
+        localStorage.removeItem('evaluatorPin');
+      }
+    }
+  }
+
+  function enterApp() {
+    document.getElementById('view-login').classList.add('hidden');
+    document.getElementById('view-app').classList.remove('hidden');
+    switchTab('PENDING');
+  }
+
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar-footer').classList.toggle('open');
+  }
+
+  function closeMobileMenu() {
+    document.querySelector('.sidebar-footer').classList.remove('open');
+  }
+
+  async function logout() {
+    closeMobileMenu();
+    await api('/training/api/logout', { method: 'POST' });
+    localStorage.removeItem('evaluatorName');
+    localStorage.removeItem('evaluatorPin');
+    currentEvaluator = null;
+    document.getElementById('view-app').classList.add('hidden');
+    document.getElementById('view-login').classList.remove('hidden');
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    document.getElementById('sectionTitle').textContent = TAB_TITLES[tab];
+    document.getElementById('section-list').classList.toggle('hidden', tab === 'UPLOAD');
+    document.getElementById('section-upload').classList.toggle('hidden', tab !== 'UPLOAD');
+    document.getElementById('uploadSubmitFixed').classList.toggle('hidden', tab !== 'UPLOAD');
+    document.getElementById('labelFilter').classList.toggle('hidden', tab !== 'COMPLETED');
+
+    if (tab === 'UPLOAD') {
+      if (document.getElementById('uploadRows').children.length === 0) {
+        addUploadRow();
+      }
+    } else {
+      loadPosts();
+    }
+  }
+
+  let searchTimer = null;
+  function onSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(loadPosts, 250);
+  }
+
+  let labelFilterValue = '';
+  function selectLabelFilter(event) {
+    const btn = event.target.closest('.toggle-btn');
+    if (!btn) return;
+    btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    labelFilterValue = btn.dataset.value;
+    loadPosts();
+  }
+
+  async function loadPosts() {
+    const keyword = document.getElementById('searchInput').value.trim();
+    const json = await api('/training/api/posts?status=' + currentTab + '&keyword=' + encodeURIComponent(keyword));
+    let posts = json.data || [];
+    if (currentTab === 'COMPLETED' && labelFilterValue !== '') {
+      posts = posts.filter(p => String(p.finalLabel) === labelFilterValue);
+    }
+    renderPostList(posts);
+  }
+
+  function renderPostList(posts) {
+    const container = document.getElementById('postGrid');
+    if (posts.length === 0) {
+      container.innerHTML = '<div class="empty-state">평가글이 없습니다.</div>';
+      return;
+    }
+    container.innerHTML = posts.map(renderPostCard).join('');
+  }
+
+  function renderPostCard(post) {
+    const evaluatedCount = (post.evaluatorNames || []).length;
+    const rightBadge = post.status === 'COMPLETED'
+      ? labelBadge(post.finalLabel)
+      : '<span class="badge brand">평가 ' + evaluatedCount + '/3</span>';
+    return '' +
+      '<button class="post-card" onclick="App.openDetail(' + post.id + ')">' +
+        '<div class="row">' +
+          '<div class="main-col">' +
+            '<p class="title">' + escapeHtml(post.title) + '</p>' +
+            '<p class="desc">' + escapeHtml(post.content) + '</p>' +
+          '</div>' +
+          '<div class="suffix">' +
+            rightBadge +
+          '</div>' +
+        '</div>' +
+      '</button>';
+  }
+
+  function addUploadRow() {
+    uploadRowSeq++;
+    const id = uploadRowSeq;
+    const wrap = document.createElement('div');
+    wrap.className = 'upload-row';
+    wrap.dataset.rowId = id;
+    wrap.innerHTML = '' +
+      '<div class="upload-row-head">' +
+        '<input type="checkbox" class="row-check">' +
+        '<span class="index">항목 #' + id + '</span>' +
+        '<button class="remove-row-btn" onclick="this.closest(\'.upload-row\').remove()">삭제</button>' +
+      '</div>' +
+      '<div class="field" style="margin-bottom:8px;"><input type="text" class="row-title field-input" placeholder="제목"></div>' +
+      '<div class="field" style="margin-bottom:10px;"><textarea class="row-content field-textarea" placeholder="핫딜글 내용"></textarea></div>' +
+      '<div class="label-toggle" onclick="App.selectRowLabel(event)">' +
+        '<button type="button" class="toggle-btn active" data-value="">미평가</button>' +
+        '<button type="button" class="toggle-btn" data-value="0">정상</button>' +
+        '<button type="button" class="toggle-btn" data-value="1">광고</button>' +
+        '<button type="button" class="toggle-btn" data-value="2">애매</button>' +
+      '</div>';
+    document.getElementById('uploadRows').appendChild(wrap);
+    ensureAddPlaceholder();
+  }
+
+  function ensureAddPlaceholder() {
+    const container = document.getElementById('uploadRows');
+    let placeholder = document.getElementById('addRowPlaceholder');
+    if (!placeholder) {
+      placeholder = document.createElement('button');
+      placeholder.id = 'addRowPlaceholder';
+      placeholder.type = 'button';
+      placeholder.className = 'add-placeholder';
+      placeholder.innerHTML = '+';
+      placeholder.onclick = addUploadRow;
+    }
+    container.appendChild(placeholder);
+  }
+
+  function selectRowLabel(event) {
+    const btn = event.target.closest('.toggle-btn');
+    if (!btn) return;
+    btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function setRowLabel(row, value) {
+    const group = row.querySelector('.label-toggle');
+    group.querySelectorAll('.toggle-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.value === value);
+    });
+  }
+
+  function applyBulkLabel() {
+    const value = document.getElementById('bulkLabelSelect').value;
+    if (value === '') { toast('적용할 라벨을 선택해주세요.'); return; }
+    document.querySelectorAll('.upload-row').forEach(row => {
+      const checked = row.querySelector('.row-check').checked;
+      if (checked) {
+        setRowLabel(row, value);
+      }
+    });
+  }
+
+  async function submitUpload() {
+    const rows = document.querySelectorAll('.upload-row');
+    const items = [];
+    rows.forEach(row => {
+      const title = row.querySelector('.row-title').value.trim();
+      const content = row.querySelector('.row-content').value.trim();
+      const labelValue = row.querySelector('.toggle-btn.active').dataset.value;
+      if (!title && !content) return;
+      items.push({
+        title: title,
+        content: content,
+        label: labelValue === '' ? null : parseInt(labelValue, 10)
+      });
+    });
+    if (items.length === 0) {
+      toast('등록할 내용을 입력해주세요.');
+      return;
+    }
+    const json = await api('/training/api/posts', { method: 'POST', body: JSON.stringify({ items }) });
+    const results = json.data || [];
+    const failCount = results.filter(r => !r.success).length;
+    toast('업로드 완료 (성공 ' + (results.length - failCount) + ', 실패(중복) ' + failCount + ')');
+    document.getElementById('uploadRows').innerHTML = '';
+    addUploadRow();
+    switchTab('PENDING');
+  }
+
+  async function openDetail(id) {
+    currentDetailId = id;
+    const json = await api('/training/api/posts/' + id);
+    renderDetail(json.data);
+    document.getElementById('detailOverlay').classList.remove('hidden');
+    requestAnimationFrame(() => document.getElementById('detailOverlay').classList.add('open'));
+  }
+
+  function closeDetail() {
+    const overlay = document.getElementById('detailOverlay');
+    overlay.classList.remove('open');
+    setTimeout(() => overlay.classList.add('hidden'), 250);
+    currentDetailId = null;
+    loadPosts();
+  }
+
+  function onOverlayClick(event) {
+    if (event.target.id === 'detailOverlay') closeDetail();
+  }
+
+  function renderDetail(post) {
+    const evalRows = (post.evaluations || []).map(renderEvalRow).join('');
+    const statusLine = post.status === 'COMPLETED'
+      ? '<p style="font-size:13px;color:var(--text-subtle);margin:12px 0 0;">최종 라벨 ' + labelBadge(post.finalLabel) + '</p>'
+      : '';
+    const pickSection = post.remaining > 0
+      ? '<div class="pick-row">' +
+          '<button data-label="0" onclick="App.submitEvaluation(' + post.id + ', 0)">정상</button>' +
+          '<button data-label="1" onclick="App.submitEvaluation(' + post.id + ', 1)">광고</button>' +
+          '<button data-label="2" onclick="App.submitEvaluation(' + post.id + ', 2)">애매</button>' +
+        '</div>'
+      : '<p style="text-align:center;font-size:13px;color:var(--text-subtle);margin:0;font-weight:700;">평가 완료</p>';
+
+    document.getElementById('detailBody').innerHTML = '' +
+      '<p style="font-size:16px;font-weight:700;margin:0 0 8px;">' + escapeHtml(post.title) + '</p>' +
+      '<p style="font-size:14px;line-height:1.6;white-space:pre-wrap;color:var(--text-muted);margin:0;">' + escapeHtml(post.content) + '</p>' +
+      statusLine +
+
+      '<details class="accordion" style="margin-top:16px;">' +
+        '<summary>판별 기준</summary>' +
+        '<ol>' +
+          '<li>판매 목적 홍보 문구 ("지금 바로", "선착순", "놓치지 마세요" 등)</li>' +
+          '<li>시선 끌기용 특수기호·이모지 남발 (★, 【】, 🔥 반복)</li>' +
+          '<li>잘 알려진 제품인데 길게 소개함 — 단, 흔치않은 제품은 제외</li>' +
+          '<li>가격 정보보다 제품 설명이 길거나 쓸데없는 사족이 많음</li>' +
+          '<li>친구 추천 리워드, 추천인 코드, 외부 접속 유도 문구 존재</li>' +
+          '<li>카드, 주식, 보험, 예금 등 금융상품 가입 유도 글들</li>' +
+        '</ol>' +
+      '</details>' +
+
+      '<p style="font-weight:700;margin:16px 0 8px;">평가 ' + (post.evaluations || []).length + '/3</p>' +
+      (evalRows || '<p style="font-size:13px;color:var(--text-subtle);margin:0;">아직 평가가 없습니다.</p>') +
+
+      '<div style="margin-top:16px;">' + pickSection + '</div>';
+
+    document.getElementById('detailFooter').innerHTML =
+      '<button class="action-btn critical-weak full" onclick="App.deletePost(' + post.id + ')">평가글 삭제</button>';
+  }
+
+  function renderEvalRow(evaluation) {
+    const btn = (value, text) => '<button data-label="' + value + '"' +
+      (evaluation.label === value ? ' class="active-pick"' : '') +
+      ' onclick="App.updateEvaluation(' + evaluation.id + ', ' + value + ')">' + text + '</button>';
+    return '' +
+      '<div class="eval-row">' +
+        '<span class="name">' + escapeHtml(evaluation.evaluatorName) + '</span>' +
+        '<div class="eval-pick">' +
+          btn(0, '정상') + btn(1, '광고') + btn(2, '애매') +
+        '</div>' +
+        '<button class="eval-delete-btn" onclick="App.deleteEvaluation(' + evaluation.id + ')">&times;</button>' +
+      '</div>';
+  }
+
+  async function submitEvaluation(postId, label) {
+    const json = await api('/training/api/posts/' + postId + '/evaluations', {
+      method: 'POST', body: JSON.stringify({ label })
+    });
+    if (json.data && json.data.success === false) {
+      toast(json.data.message);
+      return;
+    }
+    toast('평가가 등록되었습니다.');
+    openDetail(postId);
+  }
+
+  async function updateEvaluation(evaluationId, label) {
+    await api('/training/api/evaluations/' + evaluationId, {
+      method: 'PUT', body: JSON.stringify({ label: parseInt(label, 10) })
+    });
+    toast('평가가 수정되었습니다.');
+    if (currentDetailId) openDetail(currentDetailId);
+  }
+
+  async function deletePost(postId) {
+    if (!confirm('이 평가글을 삭제할까요? 평가 내역도 함께 삭제됩니다.')) return;
+    await api('/training/api/posts/' + postId, { method: 'DELETE' });
+    toast('삭제되었습니다.');
+    closeDetail();
+  }
+
+  async function deleteEvaluation(evaluationId) {
+    await api('/training/api/evaluations/' + evaluationId, { method: 'DELETE' });
+    toast('평가가 삭제되었습니다.');
+    if (currentDetailId) openDetail(currentDetailId);
+  }
+
+  async function copyTrainingData() {
+    closeMobileMenu();
+    const json = await api('/training/api/export');
+    document.getElementById('exportText').value = json.data || '';
+    document.getElementById('exportDialog').classList.remove('hidden');
+    requestAnimationFrame(() => document.getElementById('exportDialog').classList.add('open'));
+  }
+
+  function closeExportDialog() {
+    document.getElementById('exportDialog').classList.remove('open');
+    setTimeout(() => document.getElementById('exportDialog').classList.add('hidden'), 200);
+  }
+
+  function onExportBackdropClick(event) {
+    if (event.target.id === 'exportDialog') closeExportDialog();
+  }
+
+  async function copyExportText() {
+    await navigator.clipboard.writeText(document.getElementById('exportText').value);
+    toast('복사되었습니다.');
+  }
+
+  return {
+    login, logout, checkSession, switchTab, onSearch, toggleMobileMenu, selectLabelFilter,
+    addUploadRow, applyBulkLabel, submitUpload, selectRowLabel,
+    openDetail, closeDetail, onOverlayClick,
+    submitEvaluation, updateEvaluation, deletePost, deleteEvaluation,
+    copyTrainingData, closeExportDialog, onExportBackdropClick, copyExportText
+  };
+})();
+
+App.checkSession();
+</script>
+
+</body>
+</html>
