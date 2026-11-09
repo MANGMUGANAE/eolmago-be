@@ -1,8 +1,10 @@
 package com.mangmuganae.eolmago.domain.training.service;
 
+import com.mangmuganae.eolmago.domain.training.entity.Criteria;
 import com.mangmuganae.eolmago.domain.training.entity.Evaluation;
 import com.mangmuganae.eolmago.domain.training.entity.Evaluator;
 import com.mangmuganae.eolmago.domain.training.entity.HotdealPost;
+import com.mangmuganae.eolmago.domain.training.repository.CriteriaRepository;
 import com.mangmuganae.eolmago.domain.training.repository.EvaluationRepository;
 import com.mangmuganae.eolmago.domain.training.repository.EvaluatorRepository;
 import com.mangmuganae.eolmago.domain.training.repository.HotdealPostRepository;
@@ -24,13 +26,16 @@ public class TrainingService {
   private final EvaluatorRepository evaluatorRepository;
   private final HotdealPostRepository hotdealPostRepository;
   private final EvaluationRepository evaluationRepository;
+  private final CriteriaRepository criteriaRepository;
 
   public TrainingService(EvaluatorRepository evaluatorRepository,
       HotdealPostRepository hotdealPostRepository,
-      EvaluationRepository evaluationRepository) {
+      EvaluationRepository evaluationRepository,
+      CriteriaRepository criteriaRepository) {
     this.evaluatorRepository = evaluatorRepository;
     this.hotdealPostRepository = hotdealPostRepository;
     this.evaluationRepository = evaluationRepository;
+    this.criteriaRepository = criteriaRepository;
   }
 
   public record PostItem(String title, String content, Integer label) {
@@ -147,6 +152,15 @@ public class TrainingService {
     if (count < MAX_EVALUATION_COUNT) {
       hotdealPostRepository.revertToPending(postId);
     }
+  }
+
+  public String getCriteria() {
+    return criteriaRepository.findFirst().map(Criteria::getContent).orElse("");
+  }
+
+  public void updateCriteria(String content) {
+    Criteria criteria = criteriaRepository.findFirst().orElseThrow();
+    criteriaRepository.updateContent(criteria.getId(), content);
   }
 
   public String exportCsv() {

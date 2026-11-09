@@ -122,6 +122,21 @@ public class TrainingApiController {
     return ResponseDTO.of(trainingService.exportCsv(), "조회 성공");
   }
 
+  public record CriteriaRequest(String content) {
+
+  }
+
+  @GetMapping("/api/criteria")
+  public ResponseDTO<String> getCriteria() {
+    return ResponseDTO.of(trainingService.getCriteria(), "조회 성공");
+  }
+
+  @PutMapping("/api/criteria")
+  public ResponseDTO<Void> updateCriteria(@RequestBody CriteriaRequest request) {
+    trainingService.updateCriteria(request.content());
+    return ResponseDTO.of("수정되었습니다.");
+  }
+
   private Evaluator currentEvaluator(HttpSession session) {
     Long id = (Long) session.getAttribute(SESSION_EVALUATOR_ID);
     String name = (String) session.getAttribute(SESSION_EVALUATOR_NAME);
