@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -59,10 +60,13 @@ public class TrainingService {
     List<Map<String, Object>> results = new ArrayList<>();
 
     for (PostItem item : items) {
-      Map<String, Object> result = new HashMap<>();
-      result.put("title", item.title());
+      String title = maskUrls(item.title());
+      String content = maskUrls(item.content());
 
-      String contentHash = hash(item.title(), item.content());
+      Map<String, Object> result = new HashMap<>();
+      result.put("title", title);
+
+      String contentHash = hash(title, content);
       if (hotdealPostRepository.existsByContentHash(contentHash)) {
         result.put("success", false);
         result.put("message", "이미 등록된 내용입니다.");
@@ -70,7 +74,7 @@ public class TrainingService {
         continue;
       }
 
-      HotdealPost post = hotdealPostRepository.save(item.title(), item.content(), contentHash);
+      HotdealPost post = hotdealPostRepository.save(title, content, contentHash);
 
       if (item.label() != null) {
         evaluationRepository.save(post.getId(), uploader.getId(), uploader.getName(), item.label());
@@ -213,6 +217,16 @@ public class TrainingService {
     summary.put("evaluatorNames", evaluatorNames);
     summary.put("createdAt", post.getCreatedAt());
     return summary;
+  }
+
+  private static final Pattern URL_PATTERN =
+      Pattern.compile("https?://[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'()*+,;=%]+");
+
+  private String maskUrls(String text) {
+    if (text == null) {
+      return null;
+    }
+    return URL_PATTERN.matcher(text).replaceAll("[URL]");
   }
 
   private String hash(String title, String content) {
