@@ -456,7 +456,7 @@
   </main>
 </div>
 
-<div id="detailOverlay" class="panel-backdrop hidden" onclick="App.onOverlayClick(event)">
+<div id="detailOverlay" class="panel-backdrop hidden" onmousedown="App.onBackdropMouseDown(event)" onclick="App.onOverlayClick(event)">
   <div class="side-panel">
     <div class="panel-header">
       <h3>평가글 상세</h3>
@@ -467,7 +467,7 @@
   </div>
 </div>
 
-<div id="exportDialog" class="modal-backdrop hidden" onclick="App.onExportBackdropClick(event)">
+<div id="exportDialog" class="modal-backdrop hidden" onmousedown="App.onBackdropMouseDown(event)" onclick="App.onExportBackdropClick(event)">
   <div class="modal">
     <div class="modal-header">
       <h3>학습 데이터</h3>
@@ -482,7 +482,7 @@
   </div>
 </div>
 
-<div id="criteriaDialog" class="modal-backdrop hidden" onclick="App.onCriteriaBackdropClick(event)">
+<div id="criteriaDialog" class="modal-backdrop hidden" onmousedown="App.onBackdropMouseDown(event)" onclick="App.onCriteriaBackdropClick(event)">
   <div class="modal">
     <div class="modal-header">
       <h3>판별 기준 수정</h3>
@@ -505,6 +505,11 @@ const App = (function () {
   let currentTab = 'PENDING';
   let currentEvaluator = null;
   let currentDetailId = null;
+  let backdropMouseDownOnSelf = false;
+
+  function onBackdropMouseDown(event) {
+    backdropMouseDownOnSelf = (event.target === event.currentTarget);
+  }
   let uploadRowSeq = 0;
 
   const TAB_TITLES = { PENDING: '진행중', COMPLETED: '완료', UPLOAD: '업로드' };
@@ -787,7 +792,7 @@ const App = (function () {
   }
 
   function onOverlayClick(event) {
-    if (event.target.id === 'detailOverlay') closeDetail();
+    if (event.target.id === 'detailOverlay' && backdropMouseDownOnSelf) closeDetail();
   }
 
   function renderDetail(post) {
@@ -895,7 +900,7 @@ const App = (function () {
   }
 
   function onCriteriaBackdropClick(event) {
-    if (event.target.id === 'criteriaDialog') closeCriteriaEditor();
+    if (event.target.id === 'criteriaDialog' && backdropMouseDownOnSelf) closeCriteriaEditor();
   }
 
   async function saveCriteria() {
@@ -922,7 +927,7 @@ const App = (function () {
   }
 
   function onExportBackdropClick(event) {
-    if (event.target.id === 'exportDialog') closeExportDialog();
+    if (event.target.id === 'exportDialog' && backdropMouseDownOnSelf) closeExportDialog();
   }
 
   async function copyExportText() {
@@ -933,7 +938,7 @@ const App = (function () {
   return {
     login, logout, checkSession, switchTab, onSearch, toggleMobileMenu, selectLabelFilter,
     addUploadRow, applyBulkLabel, submitUpload, selectRowLabel,
-    openDetail, closeDetail, onOverlayClick,
+    openDetail, closeDetail, onOverlayClick, onBackdropMouseDown,
     submitEvaluation, updateEvaluation, deletePost, deleteEvaluation,
     copyTrainingData, closeExportDialog, onExportBackdropClick, copyExportText,
     openCriteriaEditor, closeCriteriaEditor, onCriteriaBackdropClick, saveCriteria
