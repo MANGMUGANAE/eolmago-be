@@ -172,7 +172,9 @@ public class TrainingService {
 
     StringBuilder csv = new StringBuilder("text,label\n");
     for (HotdealPost post : posts) {
-      String text = (post.getTitle() + " " + post.getContent()).replace("\"", "\"\"");
+      String text = (post.getTitle() + " " + post.getContent())
+          .replaceAll("[\\r\\n]+", " ")
+          .replace("\"", "\"\"");
       csv.append("\"").append(text).append("\",").append(post.getFinalLabel()).append("\n");
     }
     return csv.toString();
