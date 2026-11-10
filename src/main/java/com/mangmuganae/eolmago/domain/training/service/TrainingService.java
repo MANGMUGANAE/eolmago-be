@@ -39,7 +39,7 @@ public class TrainingService {
     this.criteriaRepository = criteriaRepository;
   }
 
-  public record PostItem(String title, String content, Integer label) {
+  public record PostItem(String title, String content, Integer label, String sourceUrl) {
 
   }
 
@@ -74,7 +74,11 @@ public class TrainingService {
         continue;
       }
 
-      HotdealPost post = hotdealPostRepository.save(title, content, contentHash);
+      String sourceUrl = item.sourceUrl() == null ? null : item.sourceUrl().trim();
+      if (sourceUrl != null && sourceUrl.isEmpty()) {
+        sourceUrl = null;
+      }
+      HotdealPost post = hotdealPostRepository.save(title, content, contentHash, sourceUrl);
 
       if (item.label() != null) {
         evaluationRepository.save(post.getId(), uploader.getId(), uploader.getName(), item.label());
@@ -218,6 +222,7 @@ public class TrainingService {
     summary.put("remaining", MAX_EVALUATION_COUNT - evaluations.size());
     summary.put("evaluatorNames", evaluatorNames);
     summary.put("createdAt", post.getCreatedAt());
+    summary.put("sourceUrl", post.getSourceUrl());
     return summary;
   }
 

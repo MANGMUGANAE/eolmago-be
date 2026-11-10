@@ -14,6 +14,7 @@ public class HotdealPostRowMapper implements RowMapper<HotdealPost> {
         .title(rs.getString("title"))
         .content(rs.getString("content"))
         .contentHash(rs.getString("content_hash"))
+        .sourceUrl(rs.getString("source_url"))
         .status(rs.getString("status"))
         .finalLabel(rs.wasNull() ? null : finalLabel)
         .createdAt(rs.getTimestamp("created_at").toLocalDateTime())

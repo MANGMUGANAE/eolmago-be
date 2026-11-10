@@ -48,15 +48,16 @@ public class HotdealPostRepository {
     return jdbcTemplate.query(sql, hotdealPostRowMapper);
   }
 
-  public HotdealPost save(String title, String content, String contentHash) {
-    String sql = "insert into hotdeal_post (title, content, content_hash, status, created_at) "
-        + "values (?, ?, ?, 'PENDING', now())";
+  public HotdealPost save(String title, String content, String contentHash, String sourceUrl) {
+    String sql = "insert into hotdeal_post (title, content, content_hash, source_url, status, created_at) "
+        + "values (?, ?, ?, ?, 'PENDING', now())";
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(connection -> {
       PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
       ps.setString(1, title);
       ps.setString(2, content);
       ps.setString(3, contentHash);
+      ps.setString(4, sourceUrl);
       return ps;
     }, keyHolder);
 

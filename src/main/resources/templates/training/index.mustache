@@ -423,7 +423,7 @@
         <div class="upload-sticky-header">
           <details class="accordion">
             <summary>
-              <span>판별 기준</span>
+              <span>평가 기준</span>
               <button type="button" class="criteria-edit-btn" onclick="event.preventDefault(); event.stopPropagation(); App.openCriteriaEditor();">수정</button>
             </summary>
             <ol id="criteriaListUpload"></ol>
@@ -487,7 +487,7 @@
 <div id="criteriaDialog" class="modal-backdrop hidden" onmousedown="App.onBackdropMouseDown(event)" onclick="App.onCriteriaBackdropClick(event)">
   <div class="modal">
     <div class="modal-header">
-      <h3>판별 기준 수정</h3>
+      <h3>평 기준 수정</h3>
       <button onclick="App.closeCriteriaEditor()">&times;</button>
     </div>
     <div class="modal-body">
@@ -716,7 +716,8 @@ const App = (function () {
         '<button class="remove-row-btn" onclick="this.closest(\'.upload-row\').remove()">삭제</button>' +
       '</div>' +
       '<div class="field" style="margin-bottom:8px;"><input type="text" class="row-title field-input" placeholder="제목"></div>' +
-      '<div class="field" style="margin-bottom:10px;"><textarea class="row-content field-textarea" placeholder="핫딜글 내용"></textarea></div>' +
+      '<div class="field" style="margin-bottom:8px;"><textarea class="row-content field-textarea" placeholder="핫딜글 내용"></textarea></div>' +
+      '<div class="field" style="margin-bottom:10px;"><input type="text" class="row-source-url field-input" placeholder="원본 링크 (URL)"></div>' +
       '<div class="label-toggle" onclick="App.selectRowLabel(event)">' +
         '<button type="button" class="toggle-btn active" data-value="">미평가</button>' +
         '<button type="button" class="toggle-btn" data-value="0">정상</button>' +
@@ -777,12 +778,14 @@ const App = (function () {
     rows.forEach(row => {
       const title = row.querySelector('.row-title').value.trim();
       const content = row.querySelector('.row-content').value.trim();
+      const sourceUrl = row.querySelector('.row-source-url').value.trim();
       const labelValue = row.querySelector('.toggle-btn.active').dataset.value;
       if (!title && !content) return;
       items.push({
         title: title,
         content: content,
-        label: labelValue === '' ? null : parseInt(labelValue, 10)
+        label: labelValue === '' ? null : parseInt(labelValue, 10),
+        sourceUrl: sourceUrl
       });
     });
     if (items.length === 0) {
@@ -818,10 +821,14 @@ const App = (function () {
     if (event.target.id === 'detailOverlay' && backdropMouseDownOnSelf) closeDetail();
   }
 
+  function openSourceUrl(btn) {
+    window.open(btn.dataset.url, '_blank', 'noopener');
+  }
+
   function renderDetail(post) {
     const evalRows = (post.evaluations || []).map(renderEvalRow).join('');
-    const statusLine = post.status === 'COMPLETED'
-      ? '<p style="font-size:13px;color:var(--text-subtle);margin:12px 0 0;">최종 라벨 ' + labelBadge(post.finalLabel) + '</p>'
+    const sourceLinkBtn = (post.sourceUrl && /^https?:\/\//i.test(post.sourceUrl))
+      ? '<button type="button" class="link-btn brand" style="margin:8px 0 0;" data-url="' + escapeHtml(post.sourceUrl) + '" onclick="App.openSourceUrl(this)">원본글 보기 ↗</button>'
       : '';
     const pickSection = post.remaining > 0
       ? '<div class="pick-row">' +
@@ -829,20 +836,20 @@ const App = (function () {
           '<button data-label="1" onclick="App.submitEvaluation(' + post.id + ', 1)">광고</button>' +
           '<button data-label="2" onclick="App.submitEvaluation(' + post.id + ', 2)">애매</button>' +
         '</div>'
-      : '<p style="text-align:center;font-size:13px;color:var(--text-subtle);margin:0;font-weight:700;">평가 완료</p>';
+      : '<p style="text-align:center;font-size:13px;color:var(--text-subtle);margin:0;font-weight:700;">최종 라벨 ' + labelBadge(post.finalLabel) + '</p>';
 
     document.getElementById('detailBody').innerHTML = '' +
-      '<p style="font-size:16px;font-weight:700;margin:0 0 8px;">' + escapeHtml(post.title) + '</p>' +
-      '<p style="font-size:14px;line-height:1.6;white-space:pre-wrap;color:var(--text-muted);margin:0;">' + escapeHtml(post.content) + '</p>' +
-      statusLine +
-
-      '<details class="accordion" style="margin-top:16px;">' +
+      '<details class="accordion">' +
         '<summary>' +
-          '<span>판별 기준</span>' +
+          '<span>평가 기준</span>' +
           '<button type="button" class="criteria-edit-btn" onclick="event.preventDefault(); event.stopPropagation(); App.openCriteriaEditor();">수정</button>' +
         '</summary>' +
         '<ol>' + renderCriteriaItems() + '</ol>' +
       '</details>' +
+
+      '<p style="font-size:16px;font-weight:700;margin:0 0 8px;">' + escapeHtml(post.title) + '</p>' +
+      '<p style="font-size:14px;line-height:1.6;white-space:pre-wrap;color:var(--text-muted);margin:0;">' + escapeHtml(post.content) + '</p>' +
+      sourceLinkBtn +
 
       '<p style="font-weight:700;margin:16px 0 8px;">평가 ' + (post.evaluations || []).length + '/3</p>' +
       (evalRows || '<p style="font-size:13px;color:var(--text-subtle);margin:0;">아직 평가가 없습니다.</p>') +
@@ -961,7 +968,7 @@ const App = (function () {
   return {
     login, logout, checkSession, switchTab, onSearch, toggleMobileMenu, selectLabelFilter,
     addUploadRow, applyBulkLabel, toggleSelectAllRows, submitUpload, selectRowLabel,
-    openDetail, closeDetail, onOverlayClick, onBackdropMouseDown,
+    openDetail, closeDetail, onOverlayClick, onBackdropMouseDown, openSourceUrl,
     submitEvaluation, updateEvaluation, deletePost, deleteEvaluation,
     copyTrainingData, closeExportDialog, onExportBackdropClick, copyExportText,
     openCriteriaEditor, closeCriteriaEditor, onCriteriaBackdropClick, saveCriteria

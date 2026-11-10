@@ -15,6 +15,7 @@ public class HotdealPost {
   private String title;
   private String content;
   private String contentHash;
+  private String sourceUrl;
   private String status;
   private Integer finalLabel;
   private LocalDateTime createdAt;
