@@ -114,6 +114,7 @@
   .link-btn.brand { color: var(--primary); }
 
   .page-title { font-size: 20px; line-height: 27px; font-weight: 700; margin: 0 0 20px; }
+  .page-title .pill-tag { vertical-align: middle; margin-left: 4px; }
   .page-body { padding: 24px 28px 48px; max-width: 1040px; width: 100%; }
 
   .search-field { position: relative; margin-bottom: 18px; max-width: 360px; }
@@ -407,7 +408,7 @@
 
   <main class="main">
     <div class="page-body">
-      <h2 id="sectionTitle" class="page-title">평가 진행중</h2>
+      <h2 id="sectionTitle" class="page-title"><span id="sectionTitleText">평가 진행중</span> <span id="sectionCount" class="pill-tag"><b>0</b>건</span></h2>
       <div id="section-list">
         <div class="search-field">
           <input id="searchInput" type="text" placeholder="검색" oninput="App.onSearch()">
@@ -620,7 +621,8 @@ const App = (function () {
     document.querySelectorAll('.nav-item').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
-    document.getElementById('sectionTitle').textContent = TAB_TITLES[tab];
+    document.getElementById('sectionTitleText').textContent = TAB_TITLES[tab];
+    document.getElementById('sectionCount').classList.toggle('hidden', tab === 'UPLOAD');
     document.getElementById('section-list').classList.toggle('hidden', tab === 'UPLOAD');
     document.getElementById('section-upload').classList.toggle('hidden', tab !== 'UPLOAD');
     document.getElementById('uploadSubmitFixed').classList.toggle('hidden', tab !== 'UPLOAD');
@@ -655,6 +657,7 @@ const App = (function () {
     const keyword = document.getElementById('searchInput').value.trim();
     const json = await api('/training/api/posts?status=' + currentTab + '&keyword=' + encodeURIComponent(keyword));
     let posts = json.data || [];
+    document.querySelector('#sectionCount b').textContent = posts.length;
     if (currentTab === 'COMPLETED' && labelFilterValue !== '') {
       posts = posts.filter(p => String(p.finalLabel) === labelFilterValue);
     }
