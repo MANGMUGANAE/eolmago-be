@@ -717,9 +717,9 @@ const App = (function () {
         '<span class="index">항목 #' + id + '</span>' +
         '<button class="remove-row-btn" onclick="this.closest(\'.upload-row\').remove()">삭제</button>' +
       '</div>' +
+      '<div class="field" style="margin-bottom:8px;"><input type="text" class="row-source-url field-input" placeholder="원본 링크 (URL)"></div>' +
       '<div class="field" style="margin-bottom:8px;"><input type="text" class="row-title field-input" placeholder="제목"></div>' +
-      '<div class="field" style="margin-bottom:8px;"><textarea class="row-content field-textarea" placeholder="핫딜글 내용"></textarea></div>' +
-      '<div class="field" style="margin-bottom:10px;"><input type="text" class="row-source-url field-input" placeholder="원본 링크 (URL)"></div>' +
+      '<div class="field" style="margin-bottom:10px;"><textarea class="row-content field-textarea" placeholder="핫딜글 내용"></textarea></div>' +
       '<div class="label-toggle" onclick="App.selectRowLabel(event)">' +
         '<button type="button" class="toggle-btn active" data-value="">미평가</button>' +
         '<button type="button" class="toggle-btn" data-value="0">정상</button>' +
