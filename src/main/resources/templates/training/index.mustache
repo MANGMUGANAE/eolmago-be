@@ -144,6 +144,7 @@
   }
   .post-card .meta { font-size: 11px; line-height: 15px; color: var(--text-subtle); margin: 4px 0 0; }
   .post-card .id-tag { color: var(--text-subtle); font-weight: 700; margin-right: 4px; }
+  .detail-id-tag { color: var(--critical); font-weight: 700; margin-right: 6px; }
   .post-card .suffix { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
   .post-card .suffix .count { font-size: 12px; color: var(--text-subtle); }
   .badge { font-size: 12px; line-height: 16px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
@@ -848,7 +849,7 @@ const App = (function () {
         '<ol>' + renderCriteriaItems() + '</ol>' +
       '</details>' +
 
-      '<p style="font-size:16px;font-weight:700;margin:0 0 8px;"><span class="id-tag">#' + post.id + '</span>' + escapeHtml(post.title) + '</p>' +
+      '<p style="font-size:16px;font-weight:700;margin:0 0 8px;"><span class="detail-id-tag">#' + post.id + '</span> ' + escapeHtml(post.title) + '</p>' +
       '<p style="font-size:14px;line-height:1.6;white-space:pre-wrap;color:var(--text-muted);margin:0;">' + escapeHtml(post.content) + '</p>' +
       sourceLinkBtn +
 
