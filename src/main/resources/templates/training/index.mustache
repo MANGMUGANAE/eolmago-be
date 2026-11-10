@@ -142,6 +142,7 @@
     font-size: 13px; line-height: 18px; color: var(--text-subtle); margin: 0;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  .post-card .meta { font-size: 11px; line-height: 15px; color: var(--text-subtle); margin: 4px 0 0; }
   .post-card .suffix { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
   .post-card .suffix .count { font-size: 12px; color: var(--text-subtle); }
   .badge { font-size: 12px; line-height: 16px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
@@ -429,6 +430,7 @@
           </details>
 
           <div class="toolbar">
+            <input type="checkbox" id="selectAllRowsCheck" style="width:18px;height:18px;accent-color:var(--primary);" onchange="App.toggleSelectAllRows(event)">
             <select id="bulkLabelSelect" class="field-select" style="width:auto;padding:6px 8px;font-size:13px;">
               <option value="">선택</option>
               <option value="0">정상</option>
@@ -677,12 +679,28 @@ const App = (function () {
           '<div class="main-col">' +
             '<p class="title">' + escapeHtml(post.title) + '</p>' +
             '<p class="desc">' + escapeHtml(post.content) + '</p>' +
+            '<p class="meta">' + escapeHtml(formatDateTime(post.createdAt)) + '</p>' +
           '</div>' +
           '<div class="suffix">' +
             rightBadge +
           '</div>' +
         '</div>' +
       '</button>';
+  }
+
+  function formatDateTime(value) {
+    if (!value) return '';
+    let y, mo, d, h, mi;
+    if (Array.isArray(value)) {
+      [y, mo, d, h, mi] = value;
+    } else {
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return '';
+      y = date.getFullYear(); mo = date.getMonth() + 1; d = date.getDate();
+      h = date.getHours(); mi = date.getMinutes();
+    }
+    const pad = n => String(n).padStart(2, '0');
+    return y + '.' + pad(mo) + '.' + pad(d) + ' ' + pad(h) + ':' + pad(mi);
   }
 
   function addUploadRow() {
@@ -735,6 +753,11 @@ const App = (function () {
     group.querySelectorAll('.toggle-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.value === value);
     });
+  }
+
+  function toggleSelectAllRows(event) {
+    const checked = event.target.checked;
+    document.querySelectorAll('.row-check').forEach(cb => { cb.checked = checked; });
   }
 
   function applyBulkLabel() {
@@ -937,7 +960,7 @@ const App = (function () {
 
   return {
     login, logout, checkSession, switchTab, onSearch, toggleMobileMenu, selectLabelFilter,
-    addUploadRow, applyBulkLabel, submitUpload, selectRowLabel,
+    addUploadRow, applyBulkLabel, toggleSelectAllRows, submitUpload, selectRowLabel,
     openDetail, closeDetail, onOverlayClick, onBackdropMouseDown,
     submitEvaluation, updateEvaluation, deletePost, deleteEvaluation,
     copyTrainingData, closeExportDialog, onExportBackdropClick, copyExportText,

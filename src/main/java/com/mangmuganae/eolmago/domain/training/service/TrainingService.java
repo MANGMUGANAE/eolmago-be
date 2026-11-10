@@ -231,8 +231,15 @@ public class TrainingService {
     return URL_PATTERN.matcher(text).replaceAll("[URL]");
   }
 
+  private String stripToTextOnly(String text) {
+    if (text == null) {
+      return "";
+    }
+    return text.replaceAll("[^\\p{L}\\p{N}]", "");
+  }
+
   private String hash(String title, String content) {
-    String normalized = (title == null ? "" : title.trim()) + "|" + (content == null ? "" : content.trim());
+    String normalized = stripToTextOnly(title) + "|" + stripToTextOnly(content);
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
       byte[] bytes = digest.digest(normalized.getBytes(StandardCharsets.UTF_8));
