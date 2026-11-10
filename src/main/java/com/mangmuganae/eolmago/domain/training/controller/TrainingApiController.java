@@ -92,6 +92,28 @@ public class TrainingApiController {
     return ResponseDTO.of(trainingService.getPostDetail(id), "조회 성공");
   }
 
+  @GetMapping("/api/evaluation-queue")
+  public ResponseDTO<List<Map<String, Object>>> getEvaluationQueue(HttpSession session) {
+    Evaluator evaluator = currentEvaluator(session);
+    return ResponseDTO.of(trainingService.getEvaluationQueue(evaluator), "조회 성공");
+  }
+
+  public record CommentRequest(String content) {
+
+  }
+
+  @GetMapping("/api/posts/{id}/comments")
+  public ResponseDTO<List<Map<String, Object>>> listComments(@PathVariable Long id) {
+    return ResponseDTO.of(trainingService.listComments(id), "조회 성공");
+  }
+
+  @PostMapping("/api/posts/{id}/comments")
+  public ResponseDTO<Map<String, Object>> addComment(
+      @PathVariable Long id, @RequestBody CommentRequest request, HttpSession session) {
+    Evaluator evaluator = currentEvaluator(session);
+    return ResponseDTO.of(trainingService.addComment(id, evaluator, request.content()), "댓글 등록 완료");
+  }
+
   @PostMapping("/api/posts/{id}/evaluations")
   public ResponseDTO<Map<String, Object>> submitEvaluation(
       @PathVariable Long id, @RequestBody LabelRequest request, HttpSession session) {
@@ -114,6 +136,12 @@ public class TrainingApiController {
   @DeleteMapping("/api/evaluations/{id}")
   public ResponseDTO<Void> deleteEvaluation(@PathVariable Long id) {
     trainingService.deleteEvaluation(id);
+    return ResponseDTO.of("삭제되었습니다.");
+  }
+
+  @DeleteMapping("/api/comments/{id}")
+  public ResponseDTO<Void> deleteComment(@PathVariable Long id) {
+    trainingService.deleteComment(id);
     return ResponseDTO.of("삭제되었습니다.");
   }
 

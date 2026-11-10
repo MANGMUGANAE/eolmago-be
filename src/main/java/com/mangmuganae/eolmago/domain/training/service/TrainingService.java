@@ -4,14 +4,17 @@ import com.mangmuganae.eolmago.domain.training.entity.Criteria;
 import com.mangmuganae.eolmago.domain.training.entity.Evaluation;
 import com.mangmuganae.eolmago.domain.training.entity.Evaluator;
 import com.mangmuganae.eolmago.domain.training.entity.HotdealPost;
+import com.mangmuganae.eolmago.domain.training.entity.PostComment;
 import com.mangmuganae.eolmago.domain.training.repository.CriteriaRepository;
 import com.mangmuganae.eolmago.domain.training.repository.EvaluationRepository;
 import com.mangmuganae.eolmago.domain.training.repository.EvaluatorRepository;
 import com.mangmuganae.eolmago.domain.training.repository.HotdealPostRepository;
+import com.mangmuganae.eolmago.domain.training.repository.PostCommentRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,15 +33,18 @@ public class TrainingService {
   private final HotdealPostRepository hotdealPostRepository;
   private final EvaluationRepository evaluationRepository;
   private final CriteriaRepository criteriaRepository;
+  private final PostCommentRepository postCommentRepository;
 
   public TrainingService(EvaluatorRepository evaluatorRepository,
       HotdealPostRepository hotdealPostRepository,
       EvaluationRepository evaluationRepository,
-      CriteriaRepository criteriaRepository) {
+      CriteriaRepository criteriaRepository,
+      PostCommentRepository postCommentRepository) {
     this.evaluatorRepository = evaluatorRepository;
     this.hotdealPostRepository = hotdealPostRepository;
     this.evaluationRepository = evaluationRepository;
     this.criteriaRepository = criteriaRepository;
+    this.postCommentRepository = postCommentRepository;
   }
 
   public record PostItem(String title, String content, Integer label, String sourceUrl) {
@@ -121,6 +127,63 @@ public class TrainingService {
     return detail;
   }
 
+  // 1순위: 평가 0개인 글, 2순위: 내가 평가 안 한 글(평가 개수 적은순), 3순위: 내가 평가한 글(평가 개수 적은순)
+  public List<Map<String, Object>> getEvaluationQueue(Evaluator evaluator) {
+    List<HotdealPost> posts = hotdealPostRepository.findByStatus(HotdealPost.STATUS_PENDING);
+
+    List<Map<String, Object>> items = new ArrayList<>();
+    for (HotdealPost post : posts) {
+      List<Evaluation> evaluations = evaluationRepository.findByPostId(post.getId());
+      Evaluation mine = evaluations.stream()
+          .filter(evaluation -> evaluation.getEvaluatorId().equals(evaluator.getId()))
+          .findFirst()
+          .orElse(null);
+
+      int evalCount = evaluations.size();
+      int priority = evalCount == 0 ? 0 : (mine == null ? 1 : 2);
+
+      Map<String, Object> item = toPostSummary(post);
+      item.put("priority", priority);
+      item.put("myLabel", mine == null ? null : mine.getLabel());
+      item.put("myEvaluationId", mine == null ? null : mine.getId());
+      item.put("commentCount", postCommentRepository.countByPostId(post.getId()));
+      items.add(item);
+    }
+
+    items.sort(Comparator
+        .comparingInt((Map<String, Object> item) -> (Integer) item.get("priority"))
+        .thenComparingInt(item -> (Integer) item.get("evaluationCount"))
+        .thenComparing(item -> (Long) item.get("id")));
+    return items;
+  }
+
+  public List<Map<String, Object>> listComments(Long postId) {
+    List<Map<String, Object>> rows = new ArrayList<>();
+    for (PostComment comment : postCommentRepository.findByPostId(postId)) {
+      Map<String, Object> row = new HashMap<>();
+      row.put("id", comment.getId());
+      row.put("evaluatorName", comment.getEvaluatorName());
+      row.put("content", comment.getContent());
+      row.put("createdAt", comment.getCreatedAt());
+      rows.add(row);
+    }
+    return rows;
+  }
+
+  public Map<String, Object> addComment(Long postId, Evaluator evaluator, String content) {
+    PostComment saved = postCommentRepository.save(postId, evaluator.getId(), evaluator.getName(), content);
+    Map<String, Object> row = new HashMap<>();
+    row.put("id", saved.getId());
+    row.put("evaluatorName", saved.getEvaluatorName());
+    row.put("content", saved.getContent());
+    row.put("createdAt", saved.getCreatedAt());
+    return row;
+  }
+
+  public void deleteComment(Long commentId) {
+    postCommentRepository.deleteById(commentId);
+  }
+
   public Map<String, Object> submitEvaluation(Long postId, Evaluator evaluator, int label) {
     int currentCount = evaluationRepository.countByPostId(postId);
     Map<String, Object> result = new HashMap<>();
@@ -131,7 +194,7 @@ public class TrainingService {
       return result;
     }
 
-    evaluationRepository.save(postId, evaluator.getId(), evaluator.getName(), label);
+    Evaluation saved = evaluationRepository.save(postId, evaluator.getId(), evaluator.getName(), label);
     int newCount = currentCount + 1;
 
     if (newCount >= MAX_EVALUATION_COUNT) {
@@ -139,6 +202,7 @@ public class TrainingService {
     }
 
     result.put("success", true);
+    result.put("evaluationId", saved.getId());
     result.put("post", toPostSummary(hotdealPostRepository.findById(postId).orElseThrow()));
     return result;
   }

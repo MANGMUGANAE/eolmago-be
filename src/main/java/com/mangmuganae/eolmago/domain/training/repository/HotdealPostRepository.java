@@ -34,6 +34,11 @@ public class HotdealPostRepository {
     return jdbcTemplate.query(sql, hotdealPostRowMapper);
   }
 
+  public List<HotdealPost> findByStatus(String status) {
+    String sql = "select * from hotdeal_post where status = ?";
+    return jdbcTemplate.query(sql, hotdealPostRowMapper, status);
+  }
+
   public List<HotdealPost> findByStatusAndKeyword(String status, String keyword, Long idFilter) {
     String sql = "select * from hotdeal_post where status = ? "
         + "and (title like ? or content like ? or id = ?) order by created_at desc";

@@ -279,9 +279,39 @@
   }
   .eval-delete-btn:hover { color: var(--critical); }
 
+  /* ===== Detail panel comments ===== */
+  .detail-comments-list { display: flex; flex-direction: column; }
+  .detail-comment-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; }
+  .detail-comment-row + .detail-comment-row { border-top: 1px solid var(--border-subtle); }
+  .detail-comment-avatar {
+    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--primary-weak); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .detail-comment-body { flex: 1; min-width: 0; }
+  .detail-comment-meta { margin: 0; line-height: 18px; }
+  .detail-comment-meta .name { font-size: 13px; font-weight: 700; margin-right: 6px; }
+  .detail-comment-meta .time { font-size: 11px; color: var(--text-subtle); }
+  .detail-comment-text { font-size: 14px; line-height: 1.5; color: var(--text); margin: 3px 0 0; white-space: pre-wrap; word-break: break-word; }
+  .detail-comments-empty { text-align: center; color: var(--text-subtle); font-size: 13px; padding: 20px 0; }
+
+  .detail-comment-input-row { display: flex; align-items: center; gap: 4px; margin-top: 12px; }
+  .detail-comment-input-row input {
+    flex: 1; padding: 10px 14px; border-radius: var(--radius-pill); border: 1px solid transparent;
+    background: var(--fill); color: var(--text); font-size: 13px; outline: none;
+    transition: border-color 150ms var(--ease), box-shadow 150ms var(--ease);
+  }
+  .detail-comment-input-row input::placeholder { color: var(--placeholder); }
+  .detail-comment-input-row input:focus { border-color: var(--focus-ring); box-shadow: 0 0 0 3px rgba(94,152,254,0.3); }
+  .detail-comment-submit-btn {
+    flex-shrink: 0; background: none; border: none; color: var(--primary);
+    font-size: 13px; font-weight: 700; padding: 8px 10px;
+  }
+
   /* ===== Dialog (export data) ===== */
   .modal-backdrop {
-    position: fixed; inset: 0; background: var(--overlay); z-index: 110;
+    position: fixed; inset: 0; background: var(--overlay); z-index: 160;
     display: flex; align-items: center; justify-content: center; padding: 20px;
     opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease);
   }
@@ -304,6 +334,117 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   .modal-footer { padding: 14px 20px calc(16px + env(safe-area-inset-bottom)); flex-shrink: 0; border-top: 1px solid var(--border-subtle); }
+
+  /* ===== Shorts evaluation ===== */
+  .shorts-overlay {
+    position: fixed; inset: 0; background: #000; z-index: 150;
+    display: flex; align-items: stretch; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease);
+  }
+  .shorts-overlay.open { opacity: 1; pointer-events: auto; }
+  .shorts-card-wrap { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  .shorts-close-btn {
+    position: absolute; top: 14px; right: 14px; z-index: 10;
+    background: rgba(0,0,0,0.35); border: none; color: #fff;
+    width: 36px; height: 36px; border-radius: 50%; font-size: 20px; line-height: 1;
+  }
+  .shorts-nav-btn { display: none; }
+  .shorts-stage { position: relative; width: 100%; height: 100%; touch-action: none; overflow: hidden; }
+  .shorts-card {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    padding: 64px 20px 28px; overflow-y: auto; will-change: transform, opacity;
+  }
+  .shorts-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-shrink: 0; }
+  .shorts-criteria-wrap { position: relative; }
+  .shorts-criteria-btn { background: var(--fill); border-radius: var(--radius-pill); padding: 5px 12px; }
+  .shorts-card-body { flex: 1 0 auto; padding-right: 52px; }
+  .shorts-title { font-size: 18px; font-weight: 700; line-height: 25px; margin: 0 0 10px; }
+  .shorts-content { font-size: 15px; line-height: 1.6; color: var(--text-muted); white-space: pre-wrap; margin: 0; }
+  .shorts-source-btn { margin-top: 10px; }
+  .shorts-actions {
+    position: absolute; right: 14px; bottom: 90px; display: flex; flex-direction: column;
+    align-items: center; gap: 22px; z-index: 5;
+  }
+  .shorts-heart-btn, .shorts-comment-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; color: #fff; }
+  .shorts-heart-icon { display: inline-block; font-size: 34px; line-height: 1; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.4); transition: transform 150ms var(--ease); }
+  .shorts-heart-btn.active .shorts-heart-icon { transform: scale(1.2); }
+  .shorts-heart-btn[data-label="0"] .shorts-heart-icon { color: var(--positive); }
+  .shorts-heart-btn[data-label="1"] .shorts-heart-icon { color: var(--critical); }
+  .shorts-heart-btn[data-label="2"] .shorts-heart-icon { color: var(--warning); }
+  .shorts-comment-icon { width: 27px; height: 27px; display: block; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4)); }
+  .shorts-comment-count { font-size: 12px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+
+  /* ===== Criteria popover (speech-bubble style, anchored to the trigger) ===== */
+  .shorts-criteria-popover {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    width: 240px; max-width: calc(100vw - 48px);
+    background: var(--layer); color: var(--text); border-radius: 14px;
+    box-shadow: var(--shadow-3); padding: 14px 16px; z-index: 12;
+    opacity: 0; transform: scale(0.94) translateY(-6px); transform-origin: top right;
+    pointer-events: none;
+    transition: opacity 160ms var(--ease-enter), transform 160ms var(--ease-enter);
+  }
+  .shorts-criteria-popover.open { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+  .shorts-criteria-popover-arrow {
+    position: absolute; top: -5px; right: 22px; width: 10px; height: 10px;
+    background: var(--layer); transform: rotate(45deg);
+  }
+  .shorts-criteria-popover-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .shorts-criteria-popover-head span { font-size: 13px; font-weight: 700; }
+  .shorts-criteria-popover-list { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.6; color: var(--text-muted); max-height: 40vh; overflow-y: auto; }
+  .shorts-criteria-popover-list li + li { margin-top: 4px; }
+  .shorts-label-toast {
+    position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(0.9);
+    background: var(--inverted-bg); color: var(--inverted-text); font-size: 15px; font-weight: 700;
+    padding: 10px 18px; border-radius: var(--radius-pill); opacity: 0; pointer-events: none;
+    transition: opacity 200ms var(--ease), transform 200ms var(--ease); z-index: 6;
+  }
+  .shorts-label-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+  .shorts-comments-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 19; opacity: 0; transition: opacity 200ms var(--ease); }
+  .shorts-comments-backdrop.open { opacity: 1; }
+  .shorts-comments-sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 62%;
+    background: var(--layer); border-radius: 20px 20px 0 0; box-shadow: var(--shadow-3);
+    display: flex; flex-direction: column; transform: translateY(100%);
+    transition: transform 220ms var(--ease-enter); z-index: 20;
+  }
+  .shorts-comments-sheet.open { transform: translateY(0); }
+  .shorts-comments-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
+  .shorts-comments-header h3 { margin: 0; font-size: 15px; font-weight: 700; }
+  .shorts-comments-header button { background: none; border: none; font-size: 20px; color: var(--text-subtle); padding: 2px 4px; }
+  .shorts-comments-list { flex: 1; overflow-y: auto; padding: 8px 18px; }
+  .shorts-comment-row { display: flex; align-items: flex-start; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+  .shorts-comment-row:last-child { border-bottom: none; }
+  .shorts-comment-body { flex: 1; min-width: 0; }
+  .shorts-comment-row .name { font-size: 13px; font-weight: 700; margin-right: 6px; }
+  .shorts-comment-row .time { font-size: 11px; color: var(--text-subtle); }
+  .shorts-comment-row .text { font-size: 13px; line-height: 18px; margin: 4px 0 0; }
+  .comment-delete-btn {
+    flex-shrink: 0; background: none; border: none; color: var(--critical);
+    font-size: 15px; line-height: 1; padding: 2px 4px;
+  }
+  .shorts-comments-empty { text-align: center; color: var(--text-subtle); font-size: 13px; padding: 32px 0; }
+  .shorts-comments-input-row { display: flex; gap: 8px; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border-subtle); flex-shrink: 0; }
+  .shorts-comments-input-row input {
+    flex: 1; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-weak);
+    background: var(--fill); color: var(--text); font-size: 13px; outline: none;
+  }
+
+  @media (min-width: 768px) {
+    .shorts-overlay { align-items: center; background: var(--overlay); }
+    .shorts-card-wrap { width: 400px; height: 86vh; max-height: 800px; border-radius: 28px; box-shadow: var(--shadow-3); }
+    .shorts-nav-btn {
+      display: flex; align-items: center; justify-content: center;
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+      width: 32px; height: 56px; border: none; background: none;
+      color: var(--text-subtle); font-size: 26px; font-weight: 700;
+      transition: color 150ms var(--ease);
+    }
+    .shorts-nav-btn:hover { color: var(--primary); }
+    .shorts-nav-btn.prev { left: 2px; }
+    .shorts-nav-btn.next { right: 2px; }
+  }
 
   /* ===== Snackbar ===== */
   .snackbar {
@@ -402,6 +543,7 @@
     </div>
     <div class="sidebar-footer">
       <button class="link-btn brand" onclick="App.copyTrainingData()">학습 데이터</button>
+      <button class="link-btn brand" onclick="App.openShorts()">평가시작</button>
       <button class="link-btn" onclick="App.logout()">로그아웃</button>
     </div>
   </nav>
@@ -502,6 +644,61 @@
   </div>
 </div>
 
+<div id="shortsOverlay" class="shorts-overlay hidden" onmousedown="App.onBackdropMouseDown(event)" onclick="App.onShortsBackdropClick(event)">
+  <div class="shorts-card-wrap">
+    <button class="shorts-close-btn" onclick="App.closeShorts()">&times;</button>
+    <button class="shorts-nav-btn prev" onclick="App.shortsCommit('down')">&#8249;</button>
+    <button class="shorts-nav-btn next" onclick="App.shortsCommit('up')">&#8250;</button>
+    <div id="shortsStage" class="shorts-stage">
+      <div id="shortsCard" class="shorts-card">
+        <div class="shorts-card-header">
+          <span id="shortsProgress" class="badge brand">평가 0/3</span>
+          <div class="shorts-criteria-wrap">
+            <button type="button" id="shortsCriteriaBtn" class="criteria-edit-btn shorts-criteria-btn" onclick="App.toggleShortsCriteria(event)">평가기준</button>
+            <div id="shortsCriteriaPopover" class="shorts-criteria-popover hidden">
+              <div class="shorts-criteria-popover-arrow"></div>
+              <div class="shorts-criteria-popover-head">
+                <span>평가 기준</span>
+                <button type="button" class="criteria-edit-btn" onclick="App.openCriteriaEditor()">수정</button>
+              </div>
+              <ol id="shortsCriteriaPopoverList" class="shorts-criteria-popover-list"></ol>
+            </div>
+          </div>
+        </div>
+        <div class="shorts-card-body">
+          <p id="shortsTitle" class="shorts-title"></p>
+          <p id="shortsContent" class="shorts-content"></p>
+          <button type="button" id="shortsSourceBtn" class="link-btn brand shorts-source-btn hidden" onclick="App.openSourceUrl(this)">원본글 보기 ↗</button>
+        </div>
+        <div class="shorts-actions">
+          <button type="button" id="shortsHeartBtn" class="shorts-heart-btn" onclick="App.toggleShortsHeart()">
+            <span class="shorts-heart-icon">♡</span>
+          </button>
+          <button type="button" id="shortsCommentBtn" class="shorts-comment-btn" onclick="App.openShortsComments()">
+            <svg class="shorts-comment-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 4C7.4 4 2 8.56 2 14.2c0 3.1 1.66 5.87 4.28 7.74-.1 1.24-.5 2.76-1.28 4.26 1.98-.4 3.76-1.24 5.12-2.14 1.2.34 2.5.54 3.88.54 6.6 0 12-4.56 12-10.2S20.6 4 14 4z" fill="#fff"/>
+            </svg>
+            <span id="shortsCommentCount" class="shorts-comment-count">0</span>
+          </button>
+        </div>
+        <div id="shortsLabelToast" class="shorts-label-toast"></div>
+      </div>
+    </div>
+    <div id="shortsCommentsBackdrop" class="shorts-comments-backdrop hidden" onclick="App.closeShortsComments()"></div>
+    <div id="shortsCommentsSheet" class="shorts-comments-sheet hidden">
+      <div class="shorts-comments-header">
+        <h3>댓글</h3>
+        <button onclick="App.closeShortsComments()">&times;</button>
+      </div>
+      <div id="shortsCommentsList" class="shorts-comments-list"></div>
+      <div class="shorts-comments-input-row">
+        <input id="shortsCommentInput" type="text" placeholder="댓글을 입력하세요" maxlength="300" onkeydown="if(event.key==='Enter'){event.preventDefault();App.submitShortsComment();}">
+        <button class="action-btn primary" onclick="App.submitShortsComment()">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="snackbar"><span>✓</span><span id="toastText"></span></div>
 
 <script>
@@ -516,6 +713,14 @@ const App = (function () {
     backdropMouseDownOnSelf = (event.target === event.currentTarget);
   }
   let uploadRowSeq = 0;
+
+  let shortsQueue = [];
+  let shortsIndex = -1;
+  let shortsDragging = false;
+  let shortsDragStartY = 0;
+  let shortsLastDy = 0;
+  let shortsCommentsPostId = null;
+  let shortsLabelToastTimer = null;
 
   const TAB_TITLES = { PENDING: '진행중', COMPLETED: '완료', UPLOAD: '업로드' };
 
@@ -812,6 +1017,7 @@ const App = (function () {
     renderDetail(json.data);
     document.getElementById('detailOverlay').classList.remove('hidden');
     requestAnimationFrame(() => document.getElementById('detailOverlay').classList.add('open'));
+    loadDetailComments(id);
   }
 
   function closeDetail() {
@@ -859,10 +1065,82 @@ const App = (function () {
       '<p style="font-weight:700;margin:16px 0 8px;">평가 ' + (post.evaluations || []).length + '/3</p>' +
       (evalRows || '<p style="font-size:13px;color:var(--text-subtle);margin:0;">아직 평가가 없습니다.</p>') +
 
-      '<div style="margin-top:16px;">' + pickSection + '</div>';
+      '<div style="margin-top:16px;">' + pickSection + '</div>' +
+
+      '<hr class="divider">' +
+      '<p style="font-weight:700;margin:0 0 4px;">댓글 <span id="detailCommentsCount">0</span></p>' +
+      '<div id="detailCommentsList" class="detail-comments-list"></div>' +
+      '<div class="detail-comment-input-row">' +
+        '<input id="detailCommentInput" type="text" placeholder="댓글을 입력하세요" maxlength="300" onkeydown="if(event.key===\'Enter\'){event.preventDefault();App.submitDetailComment();}">' +
+        '<button type="button" class="detail-comment-submit-btn" onclick="App.submitDetailComment()">등록</button>' +
+      '</div>';
 
     document.getElementById('detailFooter').innerHTML =
       '<button class="action-btn critical-weak full" onclick="App.deletePost(' + post.id + ')">평가글 삭제</button>';
+  }
+
+  async function loadDetailComments(postId) {
+    const json = await api('/training/api/posts/' + postId + '/comments');
+    renderDetailComments(json.data || []);
+  }
+
+  function detailCommentRowHtml(c) {
+    const initial = escapeHtml((c.evaluatorName || '?').trim().charAt(0) || '?');
+    return '' +
+      '<div class="detail-comment-row" data-comment-id="' + c.id + '">' +
+        '<div class="detail-comment-avatar">' + initial + '</div>' +
+        '<div class="detail-comment-body">' +
+          '<p class="detail-comment-meta"><span class="name">' + escapeHtml(c.evaluatorName) + '</span><span class="time">' + escapeHtml(formatDateTime(c.createdAt)) + '</span></p>' +
+          '<p class="detail-comment-text">' + escapeHtml(c.content) + '</p>' +
+        '</div>' +
+        '<button type="button" class="comment-delete-btn" onclick="App.deleteDetailComment(' + c.id + ')">&times;</button>' +
+      '</div>';
+  }
+
+  function renderDetailComments(comments) {
+    const list = document.getElementById('detailCommentsList');
+    if (!list) return;
+    document.getElementById('detailCommentsCount').textContent = comments.length;
+    if (comments.length === 0) {
+      list.innerHTML = '<div class="detail-comments-empty">아직 댓글이 없습니다.</div>';
+      return;
+    }
+    list.innerHTML = comments.map(detailCommentRowHtml).join('');
+  }
+
+  function appendDetailComment(comment) {
+    const list = document.getElementById('detailCommentsList');
+    if (!list) return;
+    const empty = list.querySelector('.detail-comments-empty');
+    if (empty) empty.remove();
+    list.insertAdjacentHTML('beforeend', detailCommentRowHtml(comment));
+    const countEl = document.getElementById('detailCommentsCount');
+    countEl.textContent = parseInt(countEl.textContent, 10) + 1;
+  }
+
+  async function deleteDetailComment(commentId) {
+    await api('/training/api/comments/' + commentId, { method: 'DELETE' });
+    const list = document.getElementById('detailCommentsList');
+    if (!list) return;
+    const row = list.querySelector('[data-comment-id="' + commentId + '"]');
+    if (row) row.remove();
+    const countEl = document.getElementById('detailCommentsCount');
+    const newCount = Math.max(0, parseInt(countEl.textContent, 10) - 1);
+    countEl.textContent = newCount;
+    if (newCount === 0) {
+      list.innerHTML = '<div class="detail-comments-empty">아직 댓글이 없습니다.</div>';
+    }
+  }
+
+  async function submitDetailComment() {
+    const input = document.getElementById('detailCommentInput');
+    const content = input.value.trim();
+    if (!content || currentDetailId == null) return;
+    const json = await api('/training/api/posts/' + currentDetailId + '/comments', {
+      method: 'POST', body: JSON.stringify({ content })
+    });
+    input.value = '';
+    appendDetailComment(json.data);
   }
 
   function renderEvalRow(evaluation) {
@@ -938,6 +1216,39 @@ const App = (function () {
     if (event.target.id === 'criteriaDialog' && backdropMouseDownOnSelf) closeCriteriaEditor();
   }
 
+  function toggleShortsCriteria(event) {
+    event.stopPropagation();
+    const popover = document.getElementById('shortsCriteriaPopover');
+    if (popover.classList.contains('open')) {
+      closeShortsCriteria();
+    } else {
+      openShortsCriteria();
+    }
+  }
+
+  function openShortsCriteria() {
+    const popover = document.getElementById('shortsCriteriaPopover');
+    document.getElementById('shortsCriteriaPopoverList').innerHTML = renderCriteriaItems();
+    popover.classList.remove('hidden');
+    requestAnimationFrame(() => popover.classList.add('open'));
+    document.addEventListener('click', onShortsCriteriaOutsideClick, true);
+  }
+
+  function closeShortsCriteria() {
+    const popover = document.getElementById('shortsCriteriaPopover');
+    if (!popover.classList.contains('open')) return;
+    popover.classList.remove('open');
+    setTimeout(() => popover.classList.add('hidden'), 180);
+    document.removeEventListener('click', onShortsCriteriaOutsideClick, true);
+  }
+
+  function onShortsCriteriaOutsideClick(event) {
+    const popover = document.getElementById('shortsCriteriaPopover');
+    const btn = document.getElementById('shortsCriteriaBtn');
+    if (popover.contains(event.target) || btn.contains(event.target)) return;
+    closeShortsCriteria();
+  }
+
   async function saveCriteria() {
     const content = document.getElementById('criteriaText').value;
     await api('/training/api/criteria', { method: 'PUT', body: JSON.stringify({ content }) });
@@ -970,13 +1281,311 @@ const App = (function () {
     toast('복사되었습니다.');
   }
 
+  async function openShorts() {
+    closeMobileMenu();
+    const json = await api('/training/api/evaluation-queue');
+    shortsQueue = json.data || [];
+    if (shortsQueue.length === 0) {
+      toast('평가할 글이 없습니다.');
+      return;
+    }
+    shortsIndex = 0;
+    const overlay = document.getElementById('shortsOverlay');
+    overlay.classList.remove('hidden');
+    requestAnimationFrame(() => overlay.classList.add('open'));
+    const card = document.getElementById('shortsCard');
+    card.style.transition = 'none';
+    card.style.transform = shortsAxisProp() + '(0)';
+    card.style.opacity = '1';
+    renderShortsCard(shortsQueue[shortsIndex]);
+    bindShortsDrag();
+  }
+
+  function closeShorts() {
+    const overlay = document.getElementById('shortsOverlay');
+    overlay.classList.remove('open');
+    setTimeout(() => overlay.classList.add('hidden'), 200);
+    closeShortsComments();
+    closeShortsCriteria();
+  }
+
+  function shortsIsDesktop() {
+    return window.matchMedia('(min-width: 768px)').matches;
+  }
+
+  function shortsAxisProp() {
+    return shortsIsDesktop() ? 'translateX' : 'translateY';
+  }
+
+  function shortsAxisPoint(touch) {
+    return shortsIsDesktop() ? touch.clientX : touch.clientY;
+  }
+
+  function onShortsBackdropClick(event) {
+    if (event.target.id === 'shortsOverlay' && backdropMouseDownOnSelf) closeShorts();
+  }
+
+  function currentShortsItem() {
+    return shortsQueue[shortsIndex];
+  }
+
+  function renderShortsCard(item) {
+    closeShortsCriteria();
+    document.getElementById('shortsProgress').textContent = '평가 ' + item.evaluationCount + '/3';
+    document.getElementById('shortsTitle').innerHTML = '<span class="id-tag">#' + item.id + '</span>' + escapeHtml(item.title);
+    document.getElementById('shortsContent').textContent = item.content;
+
+    const sourceBtn = document.getElementById('shortsSourceBtn');
+    if (item.sourceUrl && /^https?:\/\//i.test(item.sourceUrl)) {
+      sourceBtn.classList.remove('hidden');
+      sourceBtn.dataset.url = item.sourceUrl;
+    } else {
+      sourceBtn.classList.add('hidden');
+    }
+
+    renderShortsHeart(item);
+    document.getElementById('shortsCommentCount').textContent = item.commentCount || 0;
+    document.getElementById('shortsCard').scrollTop = 0;
+  }
+
+  function renderShortsHeart(item) {
+    const btn = document.getElementById('shortsHeartBtn');
+    const icon = btn.querySelector('.shorts-heart-icon');
+    if (item.myLabel === null || item.myLabel === undefined) {
+      btn.removeAttribute('data-label');
+      icon.textContent = '♡';
+    } else {
+      btn.dataset.label = String(item.myLabel);
+      icon.textContent = '♥';
+    }
+  }
+
+  async function toggleShortsHeart() {
+    const item = currentShortsItem();
+    if (!item) return;
+    const nextLabel = (item.myLabel === null || item.myLabel === undefined) ? 0 : (item.myLabel + 1) % 3;
+
+    if (item.myEvaluationId == null) {
+      const json = await api('/training/api/posts/' + item.id + '/evaluations', {
+        method: 'POST', body: JSON.stringify({ label: nextLabel })
+      });
+      if (json.data && json.data.success === false) {
+        toast(json.data.message);
+        return;
+      }
+      item.myEvaluationId = json.data.evaluationId;
+      item.evaluationCount = json.data.post.evaluationCount;
+    } else {
+      await api('/training/api/evaluations/' + item.myEvaluationId, {
+        method: 'PUT', body: JSON.stringify({ label: nextLabel })
+      });
+    }
+    item.myLabel = nextLabel;
+    renderShortsHeart(item);
+    document.getElementById('shortsProgress').textContent = '평가 ' + item.evaluationCount + '/3';
+    showShortsLabelToast(nextLabel);
+
+    const heartBtn = document.getElementById('shortsHeartBtn');
+    heartBtn.classList.remove('active');
+    requestAnimationFrame(() => {
+      heartBtn.classList.add('active');
+      setTimeout(() => heartBtn.classList.remove('active'), 220);
+    });
+  }
+
+  function showShortsLabelToast(label) {
+    const el = document.getElementById('shortsLabelToast');
+    el.textContent = label === 0 ? '정상글' : (label === 1 ? '광고글' : '애매함');
+    el.classList.add('show');
+    clearTimeout(shortsLabelToastTimer);
+    shortsLabelToastTimer = setTimeout(() => el.classList.remove('show'), 900);
+  }
+
+  async function openShortsComments() {
+    const item = currentShortsItem();
+    if (!item) return;
+    shortsCommentsPostId = item.id;
+    document.getElementById('shortsCommentsBackdrop').classList.remove('hidden');
+    document.getElementById('shortsCommentsSheet').classList.remove('hidden');
+    requestAnimationFrame(() => {
+      document.getElementById('shortsCommentsBackdrop').classList.add('open');
+      document.getElementById('shortsCommentsSheet').classList.add('open');
+    });
+    const json = await api('/training/api/posts/' + item.id + '/comments');
+    renderShortsComments(json.data || []);
+  }
+
+  function closeShortsComments() {
+    document.getElementById('shortsCommentsBackdrop').classList.remove('open');
+    document.getElementById('shortsCommentsSheet').classList.remove('open');
+    setTimeout(() => {
+      document.getElementById('shortsCommentsBackdrop').classList.add('hidden');
+      document.getElementById('shortsCommentsSheet').classList.add('hidden');
+    }, 200);
+  }
+
+  function shortsCommentRowHtml(c) {
+    return '' +
+      '<div class="shorts-comment-row" data-comment-id="' + c.id + '">' +
+        '<div class="shorts-comment-body">' +
+          '<span class="name">' + escapeHtml(c.evaluatorName) + '</span>' +
+          '<span class="time">' + escapeHtml(formatDateTime(c.createdAt)) + '</span>' +
+          '<p class="text">' + escapeHtml(c.content) + '</p>' +
+        '</div>' +
+        '<button type="button" class="comment-delete-btn" onclick="App.deleteShortsComment(' + c.id + ')">&times;</button>' +
+      '</div>';
+  }
+
+  function renderShortsComments(comments) {
+    const list = document.getElementById('shortsCommentsList');
+    if (comments.length === 0) {
+      list.innerHTML = '<div class="shorts-comments-empty">아직 댓글이 없습니다.</div>';
+      return;
+    }
+    list.innerHTML = comments.map(shortsCommentRowHtml).join('');
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function appendShortsComment(comment) {
+    const list = document.getElementById('shortsCommentsList');
+    const empty = list.querySelector('.shorts-comments-empty');
+    if (empty) empty.remove();
+    list.insertAdjacentHTML('beforeend', shortsCommentRowHtml(comment));
+    list.scrollTop = list.scrollHeight;
+  }
+
+  async function deleteShortsComment(commentId) {
+    await api('/training/api/comments/' + commentId, { method: 'DELETE' });
+    const list = document.getElementById('shortsCommentsList');
+    const row = list.querySelector('[data-comment-id="' + commentId + '"]');
+    if (row) row.remove();
+
+    const item = currentShortsItem();
+    if (item) {
+      item.commentCount = Math.max(0, (item.commentCount || 0) - 1);
+      document.getElementById('shortsCommentCount').textContent = item.commentCount;
+    }
+    if (!list.querySelector('.shorts-comment-row')) {
+      list.innerHTML = '<div class="shorts-comments-empty">아직 댓글이 없습니다.</div>';
+    }
+  }
+
+  async function submitShortsComment() {
+    const input = document.getElementById('shortsCommentInput');
+    const content = input.value.trim();
+    if (!content || shortsCommentsPostId == null) return;
+    const json = await api('/training/api/posts/' + shortsCommentsPostId + '/comments', {
+      method: 'POST', body: JSON.stringify({ content })
+    });
+    input.value = '';
+    appendShortsComment(json.data);
+
+    const item = currentShortsItem();
+    if (item && item.id === shortsCommentsPostId) {
+      item.commentCount = (item.commentCount || 0) + 1;
+      document.getElementById('shortsCommentCount').textContent = item.commentCount;
+    }
+  }
+
+  async function shortsAdvance() {
+    if (shortsIndex + 1 < shortsQueue.length) {
+      shortsIndex++;
+      renderShortsCard(shortsQueue[shortsIndex]);
+      return;
+    }
+    const json = await api('/training/api/evaluation-queue');
+    shortsQueue = json.data || [];
+    shortsIndex = 0;
+    if (shortsQueue.length === 0) {
+      toast('평가할 글이 없습니다.');
+      closeShorts();
+      return;
+    }
+    renderShortsCard(shortsQueue[shortsIndex]);
+  }
+
+  function shortsBack() {
+    if (shortsIndex > 0) {
+      shortsIndex--;
+    }
+    renderShortsCard(shortsQueue[shortsIndex]);
+  }
+
+  function shortsCommit(direction) {
+    if (document.getElementById('shortsCommentsSheet').classList.contains('open')) return;
+    const card = document.getElementById('shortsCard');
+    const axis = shortsAxisProp();
+    card.style.transition = 'transform 260ms ease, opacity 260ms ease';
+    card.style.transform = axis + (direction === 'up' ? '(-100%)' : '(100%)');
+    card.style.opacity = '0';
+    setTimeout(async () => {
+      if (direction === 'up') {
+        await shortsAdvance();
+      } else {
+        shortsBack();
+      }
+      card.style.transition = 'none';
+      card.style.transform = axis + (direction === 'up' ? '(100%)' : '(-100%)');
+      requestAnimationFrame(() => {
+        card.style.transition = 'transform 260ms ease, opacity 260ms ease';
+        card.style.transform = axis + '(0)';
+        card.style.opacity = '1';
+      });
+    }, 260);
+  }
+
+  function bindShortsDrag() {
+    const stage = document.getElementById('shortsStage');
+    if (stage.dataset.bound) return;
+    stage.dataset.bound = '1';
+    stage.addEventListener('touchstart', onShortsTouchStart, { passive: true });
+    stage.addEventListener('touchmove', onShortsTouchMove, { passive: false });
+    stage.addEventListener('touchend', onShortsTouchEnd);
+  }
+
+  function onShortsTouchStart(event) {
+    if (event.target.closest('.shorts-heart-btn, .shorts-comment-btn, .shorts-close-btn, .shorts-source-btn, .shorts-comments-sheet')) {
+      shortsDragging = false;
+      return;
+    }
+    shortsDragging = true;
+    shortsDragStartY = shortsAxisPoint(event.touches[0]);
+    shortsLastDy = 0;
+    document.getElementById('shortsCard').style.transition = 'none';
+  }
+
+  function onShortsTouchMove(event) {
+    if (!shortsDragging) return;
+    event.preventDefault();
+    shortsLastDy = shortsAxisPoint(event.touches[0]) - shortsDragStartY;
+    document.getElementById('shortsCard').style.transform = shortsAxisProp() + '(' + shortsLastDy + 'px)';
+  }
+
+  function onShortsTouchEnd() {
+    if (!shortsDragging) return;
+    shortsDragging = false;
+    const card = document.getElementById('shortsCard');
+    const threshold = (shortsIsDesktop() ? window.innerWidth : window.innerHeight) * 0.35;
+    card.style.transition = 'transform 200ms ease';
+    if (shortsLastDy < -threshold) {
+      shortsCommit('up');
+    } else if (shortsLastDy > threshold) {
+      shortsCommit('down');
+    } else {
+      card.style.transform = shortsAxisProp() + '(0)';
+    }
+  }
+
   return {
     login, logout, checkSession, switchTab, onSearch, toggleMobileMenu, selectLabelFilter,
     addUploadRow, applyBulkLabel, toggleSelectAllRows, submitUpload, selectRowLabel,
     openDetail, closeDetail, onOverlayClick, onBackdropMouseDown, openSourceUrl,
-    submitEvaluation, updateEvaluation, deletePost, deleteEvaluation,
+    submitEvaluation, updateEvaluation, deletePost, deleteEvaluation, submitDetailComment, deleteDetailComment,
     copyTrainingData, closeExportDialog, onExportBackdropClick, copyExportText,
-    openCriteriaEditor, closeCriteriaEditor, onCriteriaBackdropClick, saveCriteria
+    openCriteriaEditor, closeCriteriaEditor, onCriteriaBackdropClick, saveCriteria,
+    toggleShortsCriteria,
+    openShorts, closeShorts, onShortsBackdropClick, toggleShortsHeart,
+    openShortsComments, closeShortsComments, submitShortsComment, deleteShortsComment, shortsCommit
   };
 })();
 
