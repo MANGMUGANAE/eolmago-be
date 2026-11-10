@@ -17,12 +17,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import me.xdrop.fuzzywuzzy.FuzzySearch;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TrainingService {
 
   private static final int MAX_EVALUATION_COUNT = 3;
+  private static final int DUPLICATE_SIMILARITY_THRESHOLD = 90;
 
   private final EvaluatorRepository evaluatorRepository;
   private final HotdealPostRepository hotdealPostRepository;
@@ -58,6 +60,10 @@ public class TrainingService {
 
   public List<Map<String, Object>> uploadPosts(List<PostItem> items, Evaluator uploader) {
     List<Map<String, Object>> results = new ArrayList<>();
+    List<String> existingNormalizedTexts = new ArrayList<>();
+    for (HotdealPost existing : hotdealPostRepository.findAll()) {
+      existingNormalizedTexts.add(normalizedText(existing.getTitle(), existing.getContent()));
+    }
 
     for (PostItem item : items) {
       String title = maskUrls(item.title());
@@ -66,19 +72,21 @@ public class TrainingService {
       Map<String, Object> result = new HashMap<>();
       result.put("title", title);
 
-      String contentHash = hash(title, content);
-      if (hotdealPostRepository.existsByContentHash(contentHash)) {
+      String normalized = normalizedText(title, content);
+      if (isDuplicate(normalized, existingNormalizedTexts)) {
         result.put("success", false);
         result.put("message", "이미 등록된 내용입니다.");
         results.add(result);
         continue;
       }
 
+      String contentHash = hash(title, content);
       String sourceUrl = item.sourceUrl() == null ? null : item.sourceUrl().trim();
       if (sourceUrl != null && sourceUrl.isEmpty()) {
         sourceUrl = null;
       }
       HotdealPost post = hotdealPostRepository.save(title, content, contentHash, sourceUrl);
+      existingNormalizedTexts.add(normalized);
 
       if (item.label() != null) {
         evaluationRepository.save(post.getId(), uploader.getId(), uploader.getName(), item.label());
@@ -243,8 +251,22 @@ public class TrainingService {
     return text.replaceAll("[^\\p{L}\\p{N}]", "");
   }
 
+  private String normalizedText(String title, String content) {
+    return stripToTextOnly(title) + "|" + stripToTextOnly(content);
+  }
+
+  // rapidfuzz(Python)와 동일한 ratio 알고리즘을 쓰는 JVM 포트. 90 이상이면 같은 글로 취급
+  private boolean isDuplicate(String normalized, List<String> existingNormalizedTexts) {
+    for (String existing : existingNormalizedTexts) {
+      if (FuzzySearch.ratio(normalized, existing) >= DUPLICATE_SIMILARITY_THRESHOLD) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private String hash(String title, String content) {
-    String normalized = stripToTextOnly(title) + "|" + stripToTextOnly(content);
+    String normalized = normalizedText(title, content);
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
       byte[] bytes = digest.digest(normalized.getBytes(StandardCharsets.UTF_8));

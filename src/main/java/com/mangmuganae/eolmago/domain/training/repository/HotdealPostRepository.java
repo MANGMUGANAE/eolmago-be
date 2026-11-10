@@ -29,10 +29,9 @@ public class HotdealPostRepository {
         .findFirst();
   }
 
-  public boolean existsByContentHash(String contentHash) {
-    String sql = "select count(*) from hotdeal_post where content_hash = ?";
-    Integer count = jdbcTemplate.queryForObject(sql, Integer.class, contentHash);
-    return count != null && count > 0;
+  public List<HotdealPost> findAll() {
+    String sql = "select * from hotdeal_post";
+    return jdbcTemplate.query(sql, hotdealPostRowMapper);
   }
 
   public List<HotdealPost> findByStatusAndKeyword(String status, String keyword) {

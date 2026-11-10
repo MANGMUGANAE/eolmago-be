@@ -143,6 +143,7 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .post-card .meta { font-size: 11px; line-height: 15px; color: var(--text-subtle); margin: 4px 0 0; }
+  .post-card .id-tag { color: var(--text-subtle); font-weight: 700; margin-right: 4px; }
   .post-card .suffix { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
   .post-card .suffix .count { font-size: 12px; color: var(--text-subtle); }
   .badge { font-size: 12px; line-height: 16px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
@@ -677,7 +678,7 @@ const App = (function () {
       '<button class="post-card" onclick="App.openDetail(' + post.id + ')">' +
         '<div class="row">' +
           '<div class="main-col">' +
-            '<p class="title">' + escapeHtml(post.title) + '</p>' +
+            '<p class="title"><span class="id-tag">#' + post.id + '</span>' + escapeHtml(post.title) + '</p>' +
             '<p class="desc">' + escapeHtml(post.content) + '</p>' +
             '<p class="meta">' + escapeHtml(formatDateTime(post.createdAt)) + '</p>' +
           '</div>' +
@@ -847,7 +848,7 @@ const App = (function () {
         '<ol>' + renderCriteriaItems() + '</ol>' +
       '</details>' +
 
-      '<p style="font-size:16px;font-weight:700;margin:0 0 8px;">' + escapeHtml(post.title) + '</p>' +
+      '<p style="font-size:16px;font-weight:700;margin:0 0 8px;"><span class="id-tag">#' + post.id + '</span>' + escapeHtml(post.title) + '</p>' +
       '<p style="font-size:14px;line-height:1.6;white-space:pre-wrap;color:var(--text-muted);margin:0;">' + escapeHtml(post.content) + '</p>' +
       sourceLinkBtn +
 
