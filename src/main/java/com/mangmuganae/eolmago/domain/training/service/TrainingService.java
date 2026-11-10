@@ -101,8 +101,9 @@ public class TrainingService {
   }
 
   public List<Map<String, Object>> listPosts(String status, String keyword) {
-    String safeKeyword = keyword == null ? "" : keyword;
-    List<HotdealPost> posts = hotdealPostRepository.findByStatusAndKeyword(status, safeKeyword);
+    String safeKeyword = keyword == null ? "" : keyword.trim();
+    Long idFilter = safeKeyword.matches("\\d+") ? Long.valueOf(safeKeyword) : null;
+    List<HotdealPost> posts = hotdealPostRepository.findByStatusAndKeyword(status, safeKeyword, idFilter);
 
     List<Map<String, Object>> rows = new ArrayList<>();
     for (HotdealPost post : posts) {

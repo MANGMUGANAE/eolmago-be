@@ -34,11 +34,11 @@ public class HotdealPostRepository {
     return jdbcTemplate.query(sql, hotdealPostRowMapper);
   }
 
-  public List<HotdealPost> findByStatusAndKeyword(String status, String keyword) {
+  public List<HotdealPost> findByStatusAndKeyword(String status, String keyword, Long idFilter) {
     String sql = "select * from hotdeal_post where status = ? "
-        + "and (title like ? or content like ?) order by created_at desc";
+        + "and (title like ? or content like ? or id = ?) order by created_at desc";
     String likeKeyword = "%" + keyword + "%";
-    return jdbcTemplate.query(sql, hotdealPostRowMapper, status, likeKeyword, likeKeyword);
+    return jdbcTemplate.query(sql, hotdealPostRowMapper, status, likeKeyword, likeKeyword, idFilter);
   }
 
   public List<HotdealPost> findLabeledForExport() {
