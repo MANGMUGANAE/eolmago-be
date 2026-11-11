@@ -49,9 +49,8 @@ public class TrainingApiController {
   }
 
   @GetMapping("/api/quasarzone/list")
-  public ResponseDTO<List<Map<String, Object>>> quasarzoneList(
-      @RequestParam(defaultValue = "1") int page) {
-    return ResponseDTO.of(trainingService.fetchQuasarzoneList(page), "조회 성공");
+  public ResponseDTO<List<Map<String, Object>>> quasarzoneList() {
+    return ResponseDTO.of(trainingService.fetchQuasarzoneList(), "조회 성공");
   }
 
   @GetMapping("/api/quasarzone/detail/{postId}")

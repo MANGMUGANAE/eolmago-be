@@ -33,8 +33,6 @@ public class TrainingService {
   private static final int MAX_EVALUATION_COUNT = 3;
   private static final int DUPLICATE_SIMILARITY_THRESHOLD = 90;
 
-  private static final int COMMUNITY_PAGE_SIZE = 20;
-
   private final EvaluatorRepository evaluatorRepository;
   private final HotdealPostRepository hotdealPostRepository;
   private final EvaluationRepository evaluationRepository;
@@ -49,26 +47,18 @@ public class TrainingService {
   }
 
   // 퀘이사존 실시간 스크래핑은 Cloudflare에 막혀 쓸 수 없어, 수집기(hotdeal_collector)가
-  // 미리 채워둔 hotdeal_post 테이블을 그대로 커뮤니티 피드로 보여준다.
-  public List<Map<String, Object>> fetchQuasarzoneList(int page) {
-    int offset = Math.max(0, page - 1) * COMMUNITY_PAGE_SIZE;
-    List<HotdealPost> rows = hotdealPostRepository.findPage(offset, COMMUNITY_PAGE_SIZE);
+  // 미리 채워둔 hotdeal_post 테이블을 그대로 커뮤니티 피드로 보여준다(GPT 학습용 합성 데이터는 제외).
+  public List<Map<String, Object>> fetchQuasarzoneList() {
+    List<HotdealPost> rows = hotdealPostRepository.findCommunityFeed();
 
     List<Map<String, Object>> items = new ArrayList<>();
     for (HotdealPost post : rows) {
       Map<String, Object> item = new HashMap<>();
       item.put("id", post.getId());
       item.put("title", post.getTitle());
+      item.put("content", post.getContent());
       item.put("link", post.getSourceUrl());
-      item.put("thumbnail", null);
-      item.put("category", null);
-      item.put("isHot", false);
-      item.put("isDone", false);
-      item.put("price", null);
-      item.put("shopName", null);
-      item.put("commentCount", String.valueOf(postCommentRepository.countByPostId(post.getId())));
-      item.put("viewCount", null);
-      item.put("timeAgo", null);
+      item.put("commentCount", postCommentRepository.countByPostId(post.getId()));
       item.put("createdAt", post.getCreatedAt());
       items.add(item);
     }

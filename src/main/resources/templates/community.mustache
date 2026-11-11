@@ -63,34 +63,18 @@
     padding: 14px 16px; transition: background 150ms var(--ease);
   }
   .feed-card:active { background: var(--pressed); }
-  .feed-card-row { display: flex; gap: 12px; align-items: flex-start; }
-  .feed-thumb {
-    flex-shrink: 0; width: 72px; height: 72px; border-radius: 12px;
-    background: var(--border-regular) center/cover no-repeat;
-  }
-  .feed-main { flex: 1; min-width: 0; }
-  .feed-badges { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
-  .feed-category {
-    font-size: 11px; font-weight: 700; color: var(--primary-heavy); background: var(--primary-weak);
-    padding: 2px 8px; border-radius: var(--radius-pill); white-space: nowrap;
-  }
-  .feed-hot {
-    font-size: 11px; font-weight: 700; color: var(--orange); white-space: nowrap;
-  }
-  .feed-done {
-    font-size: 11px; font-weight: 700; color: var(--text-tertiary); white-space: nowrap;
-  }
   .feed-title {
     font-size: 14.5px; line-height: 20px; font-weight: 600; color: var(--text-strong);
-    margin: 0 0 6px;
+    margin: 0 0 4px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
-  .feed-price-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; flex-wrap: wrap; }
-  .feed-price { font-weight: 700; color: var(--text-strong); }
+  .feed-desc {
+    font-size: 13px; line-height: 19px; color: var(--text-secondary); margin: 0 0 6px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
   .feed-dot { color: var(--text-disabled); }
   .feed-meta-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-tertiary); flex-wrap: wrap; }
 
-  .load-sentinel { display: flex; justify-content: center; padding: 24px 0; color: var(--text-tertiary); font-size: 13px; }
   .empty-state, .loading-state {
     text-align: center; color: var(--text-tertiary); padding: 64px 20px; font-size: 14px;
   }
@@ -136,7 +120,6 @@
   .panel-header button { background: none; border: none; font-size: 22px; line-height: 1; color: var(--text-tertiary); padding: 4px; }
   .panel-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
 
-  .detail-thumb { width: 100%; height: 200px; border-radius: 14px; background: var(--border-regular) center/cover no-repeat; margin-bottom: 14px; }
   .detail-title { font-size: 17px; line-height: 24px; font-weight: 700; color: var(--text-strong); margin: 0 0 10px; }
   .detail-content { font-size: 14px; line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; word-break: break-word; margin: 0; }
   .detail-source-link { margin: 14px 0 0; }
@@ -246,7 +229,6 @@
 
 <div class="page">
   <div id="feed" class="feed"></div>
-  <div id="loadSentinel" class="load-sentinel hidden">불러오는 중...</div>
 </div>
 
 <div id="detailOverlay" class="panel-backdrop hidden" onmousedown="App.onBackdropMouseDown(event)" onclick="App.onOverlayClick(event)">
@@ -290,14 +272,10 @@
 <script>
 const App = (function () {
 
-  let page = 1;
   let posts = [];
   let currentEvaluator = null;
   let backdropMouseDownOnSelf = false;
   let currentDetailId = null;
-  let loadingMore = false;
-  let reachedEnd = false;
-  let observer = null;
 
   function toast(message) {
     document.getElementById('toastText').textContent = message;
@@ -361,54 +339,19 @@ const App = (function () {
 
   async function init() {
     await checkSession();
-    await loadFeed(1);
-    setupInfiniteScroll();
+    await loadFeed();
   }
 
   async function refresh() {
-    reachedEnd = false;
-    await loadFeed(1);
+    await loadFeed();
   }
 
-  function setupInfiniteScroll() {
-    if (observer) observer.disconnect();
-    observer = new IntersectionObserver(function (entries) {
-      if (entries[0].isIntersecting) loadMore();
-    }, { rootMargin: '400px 0px' });
-    observer.observe(document.getElementById('loadSentinel'));
-  }
-
-  async function loadFeed(targetPage) {
+  async function loadFeed() {
     const feed = document.getElementById('feed');
     feed.innerHTML = '<div class="loading-state">불러오는 중...</div>';
-    const json = await api('/training/api/quasarzone/list?page=' + targetPage);
+    const json = await api('/training/api/quasarzone/list');
     posts = json.data || [];
-    page = targetPage;
     renderFeed();
-  }
-
-  async function loadMore() {
-    if (loadingMore || reachedEnd) return;
-    loadingMore = true;
-    const sentinel = document.getElementById('loadSentinel');
-    sentinel.classList.remove('hidden');
-    try {
-      const nextPage = page + 1;
-      const json = await api('/training/api/quasarzone/list?page=' + nextPage);
-      const more = json.data || [];
-      if (more.length === 0) {
-        reachedEnd = true;
-        sentinel.textContent = '마지막 게시글입니다.';
-        return;
-      }
-      posts = posts.concat(more);
-      page = nextPage;
-      const feed = document.getElementById('feed');
-      feed.insertAdjacentHTML('beforeend', more.map(renderFeedCard).join(''));
-    } finally {
-      loadingMore = false;
-      if (!reachedEnd) sentinel.classList.add('hidden');
-    }
   }
 
   function renderFeed() {
@@ -421,36 +364,19 @@ const App = (function () {
   }
 
   function renderFeedCard(post) {
-    const thumbStyle = post.thumbnail ? ' style="background-image:url(\'' + escapeHtml(post.thumbnail) + '\')"' : '';
-    const badges = '' +
-      (post.category ? '<span class="feed-category">' + escapeHtml(post.category) + '</span>' : '') +
-      (post.isHot ? '<span class="feed-hot">🔥인기</span>' : '') +
-      (post.isDone ? '<span class="feed-done">종료</span>' : '');
-    const priceRow = (post.price || post.shopName) ? '' +
-      '<div class="feed-price-row">' +
-        (post.shopName ? '<span>' + escapeHtml(post.shopName) + '</span>' : '') +
-        (post.shopName && post.price ? '<span class="feed-dot">·</span>' : '') +
-        (post.price ? '<span class="feed-price">' + escapeHtml(post.price) + '</span>' : '') +
-      '</div>' : '';
     const metaParts = [];
-    if (post.viewCount) metaParts.push('조회 ' + escapeHtml(post.viewCount));
-    if (post.commentCount && post.commentCount !== '0') metaParts.push('댓글 ' + escapeHtml(post.commentCount));
-    if (post.timeAgo) metaParts.push(escapeHtml(post.timeAgo));
+    if (post.commentCount) metaParts.push('댓글 ' + escapeHtml(post.commentCount));
+    const createdAtText = formatDateTime(post.createdAt);
+    if (createdAtText) metaParts.push(createdAtText);
     const metaRow = metaParts.length
       ? '<div class="feed-meta-row">' + metaParts.join('<span class="feed-dot">·</span>') + '</div>'
       : '';
 
     return '' +
       '<button type="button" class="feed-card" data-post-id="' + escapeHtml(post.id) + '" onclick="App.openDetail(\'' + post.id + '\')">' +
-        '<div class="feed-card-row">' +
-          '<div class="feed-thumb"' + thumbStyle + '></div>' +
-          '<div class="feed-main">' +
-            (badges ? '<div class="feed-badges">' + badges + '</div>' : '') +
-            '<p class="feed-title">' + escapeHtml(post.title) + '</p>' +
-            priceRow +
-            metaRow +
-          '</div>' +
-        '</div>' +
+        '<p class="feed-title">' + escapeHtml(post.title) + '</p>' +
+        (post.content ? '<p class="feed-desc">' + escapeHtml(post.content) + '</p>' : '') +
+        metaRow +
       '</button>';
   }
 
@@ -461,10 +387,6 @@ const App = (function () {
     const json = await api('/training/api/quasarzone/detail/' + encodeURIComponent(postId));
     detailCache[postId] = json.data;
     return json.data;
-  }
-
-  function findPost(postId) {
-    return posts.find(function (p) { return String(p.id) === String(postId); });
   }
 
   function onBackdropMouseDown(event) {
@@ -490,21 +412,15 @@ const App = (function () {
 
   function renderDetailBody(postId, detail) {
     const body = document.getElementById('detailBody');
-    const listPost = findPost(postId);
-    const thumbStyle = listPost && listPost.thumbnail
-      ? ' style="background-image:url(\'' + escapeHtml(listPost.thumbnail) + '\')"' : '';
-    const thumbHtml = listPost && listPost.thumbnail ? '<div class="detail-thumb"' + thumbStyle + '></div>' : '';
 
     if (!detail || detail.status !== 'OK') {
       const reason = detail && detail.status === 'DELETED' ? '삭제되었거나 존재하지 않는 게시글입니다.'
-        : detail && detail.status === 'BLIND' ? '블라인드 처리된 게시글입니다.'
         : '게시글을 불러올 수 없습니다.';
-      body.innerHTML = thumbHtml + '<p class="detail-content">' + escapeHtml(reason) + '</p>' + commentsSectionHtml();
+      body.innerHTML = '<p class="detail-content">' + escapeHtml(reason) + '</p>' + commentsSectionHtml();
       renderComments([]);
       return;
     }
     body.innerHTML = '' +
-      thumbHtml +
       '<p class="detail-title">' + escapeHtml(detail.title) + '</p>' +
       '<p class="detail-content">' + escapeHtml(detail.content) + '</p>' +
       '<a class="btn outlined detail-source-link" href="' + escapeHtml(detail.link) + '" target="_blank" rel="noopener">원본 보기 ↗</a>' +
