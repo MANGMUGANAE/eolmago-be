@@ -4,10 +4,12 @@ import com.mangmuganae.eolmago.domain.training.entity.Evaluator;
 import com.mangmuganae.eolmago.domain.training.service.TrainingService;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
 import jakarta.servlet.http.HttpSession;
+import jakarta.websocket.server.PathParam;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/training")
 @RequiredArgsConstructor
@@ -38,6 +41,22 @@ public class TrainingApiController {
 
   public record LabelRequest(Integer label) {
 
+  }
+
+  @GetMapping("/api/model")
+  public ResponseDTO<?> model(@RequestParam String text) {
+    return ResponseDTO.of(trainingService.getModelValue(text), "요청성공");
+  }
+
+  @GetMapping("/api/quasarzone/list")
+  public ResponseDTO<List<Map<String, Object>>> quasarzoneList(
+      @RequestParam(defaultValue = "1") int page) {
+    return ResponseDTO.of(trainingService.fetchQuasarzoneList(page), "조회 성공");
+  }
+
+  @GetMapping("/api/quasarzone/detail/{postId}")
+  public ResponseDTO<Map<String, Object>> quasarzoneDetail(@PathVariable String postId) {
+    return ResponseDTO.of(trainingService.fetchQuasarzoneDetail(postId), "조회 성공");
   }
 
   @PostMapping("/api/login")

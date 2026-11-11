@@ -11,4 +11,9 @@ public class TrainingViewController {
     return "training/index";
   }
 
+  @GetMapping("/q")
+  public String community() {
+    return "community";
+  }
+
 }

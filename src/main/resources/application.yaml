@@ -5,6 +5,11 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
 
+lambda:
+  ad-classifier:
+    url: ${AWS_LAMDA_URL}
+    api-key: ${AWS_LAMDA_API_KEY}
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight([%-3level]) %cyan(%logger{5}) - %msg%n"

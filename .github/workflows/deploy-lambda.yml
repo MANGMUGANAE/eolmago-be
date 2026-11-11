@@ -1,0 +1,55 @@
+name: Deploy to Lambda
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'lambda/**'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: ad-classifier
+  LAMBDA_FUNCTION_NAME: ad-classifier
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. 깃헙 레포 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: 2. AWS 자격증명 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 3. S3에서 모델 파일 받아오기
+        run: |
+          aws s3 cp s3://eolmago-ad-classifier-model/model.onnx lambda/model.onnx
+          aws s3 cp s3://eolmago-ad-classifier-model/tokenizer.json lambda/tokenizer.json
+          aws s3 cp s3://eolmago-ad-classifier-model/tokenizer_config.json lambda/tokenizer_config.json
+          aws s3 cp s3://eolmago-ad-classifier-model/config.json lambda/config.json
+
+      - name: 4. ECR 로그인
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 5. Docker 이미지 빌드 & ECR push
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./lambda
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: 6. Lambda 함수 코드 업데이트
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --image-uri ${{ env.IMAGE_URI }}
