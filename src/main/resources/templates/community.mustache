@@ -186,6 +186,33 @@
   }
   .comment-delete-btn:hover { color: var(--negative); }
 
+  /* ===== AI 광고글 판단 모달 ===== */
+  .ai-backdrop {
+    position: fixed; inset: 0; background: var(--dimmed); z-index: 110;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease);
+  }
+  .ai-backdrop.open { opacity: 1; pointer-events: auto; }
+  .ai-modal {
+    width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto;
+    background: var(--bg); border-radius: 20px; box-shadow: var(--shadow-sheet);
+    display: flex; flex-direction: column;
+    transform: scale(0.96); transition: transform 200ms var(--ease);
+  }
+  .ai-backdrop.open .ai-modal { transform: scale(1); }
+  .ai-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 14px; }
+  .ai-example-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .ai-example-row .btn { flex: 1; }
+  .field { margin-bottom: 14px; }
+  .field-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+  .field-input, .field-textarea {
+    width: 100%; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border-regular);
+    background: var(--white); color: var(--text-primary); font-size: 14px; outline: none; font-family: inherit;
+  }
+  .field-input:focus, .field-textarea:focus { border-color: #99CEFF; }
+  .field-textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
+  .ai-result { margin-top: 14px; }
+
   @media (max-width: 480px) {
     .side-panel { width: 100vw; }
   }
@@ -213,6 +240,7 @@
 <div class="topbar">
   <h1>커뮤니티</h1>
   <span class="spacer"></span>
+  <button class="topbar-link" onclick="App.openAiCheck()">AI 광고 판단</button>
   <button class="topbar-link" onclick="App.refresh()">새로고침</button>
 </div>
 
@@ -228,6 +256,32 @@
       <button onclick="App.closeDetail()">&times;</button>
     </div>
     <div id="detailBody" class="panel-body"></div>
+  </div>
+</div>
+
+<div id="aiCheckOverlay" class="ai-backdrop hidden" onmousedown="App.onAiBackdropMouseDown(event)" onclick="App.onAiOverlayClick(event)">
+  <div class="ai-modal">
+    <div class="panel-header">
+      <h3>AI 광고글 판단</h3>
+      <button onclick="App.closeAiCheck()">&times;</button>
+    </div>
+    <div class="panel-body">
+      <p class="ai-desc">제목과 본문을 입력하면 AI가 광고글인지 판별합니다. 게시글 상세의 "광고인지 판별하기"와 같은 모델을 씁니다.</p>
+      <div class="ai-example-row">
+        <button type="button" class="btn outlined" onclick="App.fillAiExample('normal')">정상글 예시</button>
+        <button type="button" class="btn outlined" onclick="App.fillAiExample('ad')">광고글 예시</button>
+      </div>
+      <div class="field">
+        <label class="field-label">제목</label>
+        <input id="aiCheckTitle" class="field-input" type="text" placeholder="제목을 입력하세요">
+      </div>
+      <div class="field">
+        <label class="field-label">본문</label>
+        <textarea id="aiCheckContent" class="field-textarea" placeholder="본문을 입력하세요"></textarea>
+      </div>
+      <button type="button" class="btn primary full" onclick="App.runAiCheck()">판별하기</button>
+      <div id="aiCheckResult" class="ai-result"></div>
+    </div>
   </div>
 </div>
 
@@ -469,16 +523,20 @@ const App = (function () {
       const detail = await fetchDetail(postId);
       const text = (detail.title || '') + '\n\n' + (detail.content || '');
       const json = await api('/training/api/model?text=' + encodeURIComponent(text));
-      const isAd = !!json.data;
-      resultEl.innerHTML = isAd
-        ? '<span class="badge negative">광고로 추정됩니다</span>'
-        : '<span class="badge positive">정상글로 추정됩니다</span>';
+      resultEl.innerHTML = adPercentBadge(json.data);
     } catch (e) {
       toast('판별 중 오류가 발생했습니다.');
     } finally {
       btn.disabled = false;
       btn.textContent = '광고인지 판별하기';
     }
+  }
+
+  function adPercentBadge(confidence) {
+    const ratio = Number(confidence) || 0;
+    const percent = (ratio * 100).toFixed(1);
+    const cls = ratio >= 0.5 ? 'negative' : 'positive';
+    return '<span class="badge ' + cls + '">광고 확률 ' + percent + '%</span>';
   }
 
   function commentsSectionHtml() {
@@ -582,12 +640,75 @@ const App = (function () {
     currentDetailId = null;
   }
 
+  const AI_EXAMPLES = {
+    normal: {
+      title: 'Columbia 남성용 Plateau 하이킹 슈즈',
+      content: '295 사이즈만 있네요 방수 기능 없고 막 싼거 같진 않고요 가격 자체는 나쁘지 않은거 같네요'
+    },
+    ad: {
+      title: '🔥🔥역대급 특가🔥🔥 무선청소기 오늘만 이 가격!!',
+      content: '지금 바로 확인하세요!! 선착순 100명 한정!! 놓치면 후회합니다 ㅠㅠ 👉 bit.ly/○○○'
+    }
+  };
+
+  let aiBackdropMouseDownOnSelf = false;
+
+  function openAiCheck() {
+    document.getElementById('aiCheckResult').innerHTML = '';
+    const overlay = document.getElementById('aiCheckOverlay');
+    overlay.classList.remove('hidden');
+    requestAnimationFrame(() => overlay.classList.add('open'));
+  }
+
+  function closeAiCheck() {
+    const overlay = document.getElementById('aiCheckOverlay');
+    overlay.classList.remove('open');
+    setTimeout(() => overlay.classList.add('hidden'), 200);
+  }
+
+  function onAiBackdropMouseDown(event) {
+    aiBackdropMouseDownOnSelf = (event.target === event.currentTarget);
+  }
+
+  function onAiOverlayClick(event) {
+    if (event.target.id === 'aiCheckOverlay' && aiBackdropMouseDownOnSelf) closeAiCheck();
+  }
+
+  function fillAiExample(type) {
+    const example = AI_EXAMPLES[type];
+    if (!example) return;
+    document.getElementById('aiCheckTitle').value = example.title;
+    document.getElementById('aiCheckContent').value = example.content;
+    document.getElementById('aiCheckResult').innerHTML = '';
+  }
+
+  async function runAiCheck() {
+    const title = document.getElementById('aiCheckTitle').value.trim();
+    const content = document.getElementById('aiCheckContent').value.trim();
+    const resultEl = document.getElementById('aiCheckResult');
+    if (!title && !content) {
+      toast('제목이나 본문을 입력해주세요.');
+      return;
+    }
+    resultEl.innerHTML = '<span class="badge positive">판별 중...</span>';
+    try {
+      const text = title + '\n\n' + content;
+      const json = await api('/training/api/model?text=' + encodeURIComponent(text));
+      resultEl.innerHTML = adPercentBadge(json.data);
+    } catch (e) {
+      resultEl.innerHTML = '';
+      toast('판별 중 오류가 발생했습니다.');
+    }
+  }
+
   init();
 
   return {
     refresh, checkAdInDetail,
     openDetail, closeDetail, onBackdropMouseDown, onOverlayClick,
-    submitComment, deleteComment, loginAndComment
+    submitComment, deleteComment, loginAndComment,
+    openAiCheck, closeAiCheck, onAiBackdropMouseDown, onAiOverlayClick,
+    fillAiExample, runAiCheck
   };
 })();
 </script>

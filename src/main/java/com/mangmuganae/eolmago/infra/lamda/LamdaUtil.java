@@ -18,6 +18,8 @@ public class LamdaUtil {
     this.apiKey = apiKey;
   }
 
+  // 람다의 confidence는 argmax로 뽑힌 예측 라벨(일반 또는 광고)에 대한 확신도라,
+  // is_ad가 false일 때는 "정상일 확률"이다. 항상 "광고일 확률"로 바꿔서 돌려준다.
   public double getAdConfidence(String text) {
     AdClassifyResponse response = restClient.post()
         .header("x-api-key", apiKey)
@@ -25,7 +27,7 @@ public class LamdaUtil {
         .retrieve()
         .body(AdClassifyResponse.class);
 
-    return response.confidence();
+    return response.isAd() ? response.confidence() : 1 - response.confidence();
   }
 
   private record AdClassifyResponse(

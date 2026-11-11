@@ -11,9 +11,6 @@ import com.mangmuganae.eolmago.domain.training.repository.EvaluatorRepository;
 import com.mangmuganae.eolmago.domain.training.repository.HotdealPostRepository;
 import com.mangmuganae.eolmago.domain.training.repository.PostCommentRepository;
 import com.mangmuganae.eolmago.infra.lamda.LamdaUtil;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,16 +20,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
-import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -41,65 +32,8 @@ public class TrainingService {
 
   private static final int MAX_EVALUATION_COUNT = 3;
   private static final int DUPLICATE_SIMILARITY_THRESHOLD = 90;
-  private static final double THRESHOLD = 0.7;
 
-  private static final String QUASARZONE_BASE_URL = "https://quasarzone.com";
-  private static final String QUASARZONE_LIST_URL = QUASARZONE_BASE_URL + "/bbs/qb_saleinfo";
-  private static final int QUASARZONE_TIMEOUT_MS = 10000;
-
-  // collector/http_client.py의 build_session() 고정 헤더를 그대로 따른다.
-  // br/zstd는 Jsoup이 못 풀어 깨진 응답이 되므로 제외하고, referer도 보내지 않는다.
-  private static final Map<String, String> QUASARZONE_HEADERS = Map.ofEntries(
-      Map.entry("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,"
-          + "image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"),
-      Map.entry("accept-encoding", "gzip, deflate"),
-      Map.entry("accept-language", "en-US,en;q=0.9"),
-      Map.entry("cache-control", "no-cache"),
-      Map.entry("pragma", "no-cache"),
-      Map.entry("priority", "u=0, i"),
-      Map.entry("sec-ch-ua", "\"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"156\", \"Google Chrome\";v=\"156\""),
-      Map.entry("sec-ch-ua-mobile", "?0"),
-      Map.entry("sec-ch-ua-platform", "\"macOS\""),
-      Map.entry("sec-fetch-dest", "document"),
-      Map.entry("sec-fetch-mode", "navigate"),
-      Map.entry("sec-fetch-site", "none"),
-      Map.entry("sec-fetch-user", "?1"),
-      Map.entry("upgrade-insecure-requests", "1")
-  );
-  private static final String QUASARZONE_USER_AGENT =
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-          + "(KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36";
-
-  // 브라우저 세션처럼 쿠키(cf_clearance 등)를 요청 간에 들고 다닌다.
-  // Turnstile에 막히면 브라우저에서 캡차를 통과한 쿠키 문자열을 QUASARZONE_COOKIE 환경변수로 넣어 쓴다(파이썬과 동일).
-  private static final Map<String, String> QUASARZONE_COOKIES = new ConcurrentHashMap<>();
-
-  static {
-    String cookie = System.getenv("QUASARZONE_COOKIE");
-    if (cookie != null && !cookie.isBlank()) {
-      for (String pair : cookie.split(";")) {
-        String[] kv = pair.trim().split("=", 2);
-        if (kv.length == 2) {
-          QUASARZONE_COOKIES.put(kv[0].trim(), kv[1].trim());
-        }
-      }
-    }
-  }
-
-  private Connection newQuasarzoneConnection(String url) {
-    return Jsoup.connect(url)
-        .userAgent(QUASARZONE_USER_AGENT)
-        .headers(QUASARZONE_HEADERS)
-        .cookies(QUASARZONE_COOKIES)
-        .timeout(QUASARZONE_TIMEOUT_MS)
-        .maxBodySize(0);
-  }
-
-  private Document executeQuasarzoneRequest(String url) throws IOException {
-    Connection.Response response = newQuasarzoneConnection(url).execute();
-    QUASARZONE_COOKIES.putAll(response.cookies());
-    return response.parse();
-  }
+  private static final int COMMUNITY_PAGE_SIZE = 20;
 
   private final EvaluatorRepository evaluatorRepository;
   private final HotdealPostRepository hotdealPostRepository;
@@ -108,150 +42,68 @@ public class TrainingService {
   private final PostCommentRepository postCommentRepository;
 
   private final LamdaUtil lamdaUtil;
-  private final ObjectMapper objectMapper;
 
-  public Boolean getModelValue(String text) {
+  public double getModelValue(String text) {
 
-    double confidence = lamdaUtil.getAdConfidence(text);
-
-    if(confidence >= THRESHOLD) {
-      return true;
-    }
-
-    return false;
-
+    return lamdaUtil.getAdConfidence(text);
   }
 
-  // 목록 행(.v2-list-row.v2-list-row--hotdeal)에서 썸네일/가격/쇼핑몰/조회/댓글/시간까지 그대로 뽑아 중계한다.
+  // 퀘이사존 실시간 스크래핑은 Cloudflare에 막혀 쓸 수 없어, 수집기(hotdeal_collector)가
+  // 미리 채워둔 hotdeal_post 테이블을 그대로 커뮤니티 피드로 보여준다.
   public List<Map<String, Object>> fetchQuasarzoneList(int page) {
-    Document doc;
-    try {
-      doc = executeQuasarzoneRequest(QUASARZONE_LIST_URL + "?page=" + page);
-    } catch (IOException e) {
-      log.warn("퀘이사존 목록 조회 실패 page={}", page, e);
-      return List.of();
-    }
+    int offset = Math.max(0, page - 1) * COMMUNITY_PAGE_SIZE;
+    List<HotdealPost> rows = hotdealPostRepository.findPage(offset, COMMUNITY_PAGE_SIZE);
 
     List<Map<String, Object>> items = new ArrayList<>();
-    for (Element row : doc.select("div.v2-list-row.v2-list-row--hotdeal")) {
-      if (row.hasClass("v2-partner-row")) {
-        continue;
-      }
-      String postId = row.attr("data-qc-id");
-      Element titleAnchor = row.selectFirst(".tit .subject-link");
-      if (postId.isEmpty() || titleAnchor == null) {
-        continue;
-      }
-      String title = titleAnchor.text().trim();
-      if (title.isEmpty()) {
-        continue;
-      }
-
+    for (HotdealPost post : rows) {
       Map<String, Object> item = new HashMap<>();
-      item.put("id", postId);
-      item.put("title", title);
-      item.put("link", QUASARZONE_BASE_URL + "/bbs/qb_saleinfo/views/" + postId);
-      item.put("thumbnail", row.hasAttr("data-preview") ? row.attr("data-preview") : null);
-      Element badge = row.selectFirst(".v2-badge");
-      item.put("category", badge != null ? badge.text().trim() : null);
-      item.put("isHot", row.selectFirst(".v2-badge--hot") != null);
-      item.put("isDone", row.hasClass("is-done"));
-      Element priceEl = row.selectFirst(".v2-list-row__price");
-      item.put("price", priceEl != null ? priceEl.text().trim() : null);
-      Element shopLogo = row.selectFirst(".v2-shop-logo");
-      item.put("shopName", shopLogo != null ? shopLogo.attr("alt").trim() : null);
-      Element commentEl = row.selectFirst(".ctn-count");
-      item.put("commentCount", commentEl != null ? commentEl.text().trim() : "0");
-      Element hitEl = row.selectFirst(".qc-count-hit");
-      item.put("viewCount", hitEl != null ? hitEl.text().trim() : null);
-      Element timeEl = row.selectFirst(".v2-list-row__time");
-      item.put("timeAgo", timeEl != null ? timeEl.text().trim() : null);
+      item.put("id", post.getId());
+      item.put("title", post.getTitle());
+      item.put("link", post.getSourceUrl());
+      item.put("thumbnail", null);
+      item.put("category", null);
+      item.put("isHot", false);
+      item.put("isDone", false);
+      item.put("price", null);
+      item.put("shopName", null);
+      item.put("commentCount", String.valueOf(postCommentRepository.countByPostId(post.getId())));
+      item.put("viewCount", null);
+      item.put("timeAgo", null);
+      item.put("createdAt", post.getCreatedAt());
       items.add(item);
     }
     return items;
   }
 
   public Map<String, Object> fetchQuasarzoneDetail(String postId) {
-    String url = QUASARZONE_BASE_URL + "/bbs/qb_saleinfo/views/" + postId;
     Map<String, Object> result = new HashMap<>();
     result.put("id", postId);
-    result.put("link", url);
 
-    Document doc;
-    try {
-      doc = executeQuasarzoneRequest(url);
-    } catch (HttpStatusException e) {
-      result.put("status", e.getStatusCode() == 404 ? "DELETED" : "ERROR");
-      return result;
-    } catch (IOException e) {
-      log.warn("퀘이사존 상세 조회 실패 postId={}", postId, e);
-      result.put("status", "ERROR");
+    Optional<HotdealPost> found = hotdealPostRepository.findById(Long.valueOf(postId));
+    if (found.isEmpty()) {
+      result.put("status", "DELETED");
       return result;
     }
 
-    for (Element script : doc.select("script[type=application/ld+json]")) {
-      JsonNode node;
-      try {
-        node = objectMapper.readTree(script.data());
-      } catch (RuntimeException e) {
-        continue;
-      }
-      JsonNode found = findHeadlineNode(node);
-      if (found == null) {
-        continue;
-      }
-      // headline만 있고 text가 없는 글(사진/링크만 있는 정상 글)도 있다 — 성공 조건은 headline 존재 여부뿐이다.
-      String title = found.path("headline").asString("").trim();
-      if (title.isEmpty()) {
-        continue;
-      }
-      String content = found.hasNonNull("text") ? found.path("text").asString("")
-          : found.path("articleBody").asString("");
-      result.put("status", "OK");
-      result.put("title", Jsoup.parse(title).text());
-      result.put("content", Jsoup.parse(content).text());
-      return result;
-    }
-
-    result.put("status", "BLIND");
+    HotdealPost post = found.get();
+    result.put("link", post.getSourceUrl());
+    result.put("status", "OK");
+    result.put("title", post.getTitle());
+    result.put("content", post.getContent());
     return result;
-  }
-
-  private JsonNode findHeadlineNode(JsonNode node) {
-    if (node == null || node.isMissingNode()) {
-      return null;
-    }
-    if (node.isArray()) {
-      for (JsonNode child : node) {
-        JsonNode found = findHeadlineNode(child);
-        if (found != null) {
-          return found;
-        }
-      }
-      return null;
-    }
-    if (node.has("headline")) {
-      return node;
-    }
-    if (node.has("@graph")) {
-      return findHeadlineNode(node.get("@graph"));
-    }
-    return null;
   }
 
   public TrainingService(EvaluatorRepository evaluatorRepository,
       HotdealPostRepository hotdealPostRepository,
       EvaluationRepository evaluationRepository,
       CriteriaRepository criteriaRepository,
-      PostCommentRepository postCommentRepository, LamdaUtil lamdaUtil,
-      ObjectMapper objectMapper) {
+      PostCommentRepository postCommentRepository, LamdaUtil lamdaUtil) {
     this.evaluatorRepository = evaluatorRepository;
     this.hotdealPostRepository = hotdealPostRepository;
     this.evaluationRepository = evaluationRepository;
     this.criteriaRepository = criteriaRepository;
     this.postCommentRepository = postCommentRepository;
     this.lamdaUtil = lamdaUtil;
-    this.objectMapper = objectMapper;
   }
 
   public record PostItem(String title, String content, Integer label, String sourceUrl) {

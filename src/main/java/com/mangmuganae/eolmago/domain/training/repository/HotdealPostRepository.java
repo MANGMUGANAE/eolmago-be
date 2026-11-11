@@ -39,6 +39,11 @@ public class HotdealPostRepository {
     return jdbcTemplate.query(sql, hotdealPostRowMapper, status);
   }
 
+  public List<HotdealPost> findPage(int offset, int limit) {
+    String sql = "select * from hotdeal_post order by created_at desc limit ? offset ?";
+    return jdbcTemplate.query(sql, hotdealPostRowMapper, limit, offset);
+  }
+
   public List<HotdealPost> findByStatusAndKeyword(String status, String keyword, Long idFilter) {
     String sql = "select * from hotdeal_post where status = ? "
         + "and (title like ? or content like ? or id = ?) order by created_at desc";
