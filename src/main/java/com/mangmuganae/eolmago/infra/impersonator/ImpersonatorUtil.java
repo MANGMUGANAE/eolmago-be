@@ -14,7 +14,7 @@ public class ImpersonatorUtil {
   private final OkHttpClient client;
 
   public ImpersonatorUtil() {
-    ImpersonatorApi api = ImpersonatorFactory.macChrome();
+    ImpersonatorApi api = ImpersonatorFactory.macSafari();
 
     OkHttpClientFactory factory = OkHttpClientFactory.create(api);
 
