@@ -29,6 +29,13 @@ public class HotdealPostRepository {
         .findFirst();
   }
 
+  public Optional<HotdealPost> findBySourceUrl(String sourceUrl) {
+    String sql = "select * from hotdeal_post where source_url = ? order by id desc limit 1";
+    return jdbcTemplate.query(sql, hotdealPostRowMapper, sourceUrl)
+        .stream()
+        .findFirst();
+  }
+
   public List<HotdealPost> findAll() {
     String sql = "select * from hotdeal_post";
     return jdbcTemplate.query(sql, hotdealPostRowMapper);

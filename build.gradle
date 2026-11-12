@@ -18,6 +18,8 @@ repositories {
 }
 
 dependencies {
+	implementation 'com.github.zhkl0228:impersonator-okhttp:1.11.0'
+
 	implementation 'org.springframework.boot:spring-boot-starter-mustache'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'

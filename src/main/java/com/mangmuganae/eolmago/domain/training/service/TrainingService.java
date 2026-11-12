@@ -83,6 +83,17 @@ public class TrainingService {
     return result;
   }
 
+  // 커뮤니티 페이지에서 긁어온 퀘이사존 글에 댓글을 달려면 내부 post id가 필요하다.
+  // source_url로 이미 들어와 있으면 그 id를 재사용하고, 없으면 새로 만든다.
+  public HotdealPost ensureQuasarzonePost(String title, String content, String sourceUrl) {
+    Optional<HotdealPost> existing = hotdealPostRepository.findBySourceUrl(sourceUrl);
+    if (existing.isPresent()) {
+      return existing.get();
+    }
+    String contentHash = hash(title, content);
+    return hotdealPostRepository.save(title, content, contentHash, sourceUrl);
+  }
+
   public TrainingService(EvaluatorRepository evaluatorRepository,
       HotdealPostRepository hotdealPostRepository,
       EvaluationRepository evaluationRepository,
@@ -174,6 +185,17 @@ public class TrainingService {
     Map<String, Object> detail = toPostSummary(post);
     detail.put("evaluations", evaluations);
     return detail;
+  }
+
+  // 커뮤니티 페이지 전용 로그인. pin을 랜덤으로 쥐여주고 들어오기 때문에, 같은 이름이 이미 있어도
+  // 실패시키지 않고 그 계정의 pin을 새 값으로 덮어써서 항상 로그인에 성공시킨다.
+  public Evaluator registerCommunityEvaluator(String name, String pin) {
+    Optional<Evaluator> existing = evaluatorRepository.findByName(name);
+    if (existing.isPresent()) {
+      evaluatorRepository.updatePin(existing.get().getId(), pin);
+      return evaluatorRepository.findById(existing.get().getId()).orElseThrow();
+    }
+    return evaluatorRepository.save(name, pin);
   }
 
   // 1순위: 평가 0개인 글, 2순위: 내가 평가 안 한 글(평가 개수 적은순), 3순위: 내가 평가한 글(평가 개수 적은순)

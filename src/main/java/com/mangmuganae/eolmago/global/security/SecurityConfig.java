@@ -19,8 +19,7 @@ public class SecurityConfig {
             .requestMatchers(
                 "/users/**",
                 "/training/**",
-                "/training/api/model/**",
-                "/q"
+                "/q/**"
             ).permitAll()
             .anyRequest().authenticated()
         );

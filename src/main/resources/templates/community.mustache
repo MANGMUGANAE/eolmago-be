@@ -3,629 +3,939 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>커뮤니티</title>
+<title>퀘이사존</title>
 <style>
   :root {
-    --primary: #0078FF;
-    --primary-strong: #0069FF;
-    --primary-heavy: #0052E0;
-    --primary-weak: #EBF5FF;
-    --white: #FFFFFF;
-    --bg: #F2F3F8;
+    --primary: #FF6600;
+    --primary-weak: #FFF2EC;
+    --bg: #F5F6F8;
     --layer: #FFFFFF;
-    --text-strong: #141A24;
-    --text-primary: #354153;
-    --text-secondary: #697383;
-    --text-tertiary: #99A1B1;
-    --text-disabled: #B4BBCB;
-    --border-regular: #E5E8EF;
-    --divider-regular: #E5E8EF;
-    --positive: #00BB83;
-    --positive-weak: #E6FEF0;
-    --negative: #F51441;
-    --negative-weak: #FFF0F3;
-    --orange: #FF8800;
-    --dimmed: rgba(20,26,36,0.44);
-    --pressed: rgba(20,26,36,0.05);
-    --radius-pill: 9999px;
-    --shadow-sheet: 0 0 20px rgba(0,0,0,0.25);
-    --ease: cubic-bezier(0.42,0,0.58,1);
-    --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
-      Roboto, "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    --text: #1A1C20;
+    --text-muted: #555D6D;
+    --text-subtle: #868B94;
+    --border: #E5E7EB;
+    --high: #FA342C;
+    --high-weak: #FDF0F0;
+    --mid: #D4AB28;
+    --mid-weak: #FBF6E3;
+    --low: #079171;
+    --low-weak: #EDFAF6;
+    --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; background: var(--bg); min-height: 100%; }
-  body { font-family: var(--font); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; background: var(--bg); }
+  body { font-family: var(--font); color: var(--text); -webkit-font-smoothing: antialiased; }
   button { font-family: inherit; cursor: pointer; }
-  input, textarea { font-family: inherit; }
   .hidden { display: none !important; }
 
-  .topbar {
-    position: sticky; top: 0; z-index: 10;
-    display: flex; align-items: center; gap: 10px;
-    height: 56px; padding: 0 16px;
-    background: var(--layer); border-bottom: 1px solid var(--divider-regular);
+  .top-bar {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--layer); border-bottom: 1px solid var(--border);
+    padding: 16px 20px 0;
   }
-  .topbar h1 { font-size: 17px; line-height: 24px; font-weight: 700; color: var(--text-strong); margin: 0; }
-  .topbar .spacer { flex: 1; }
-  .topbar-link {
-    background: none; border: none; color: var(--text-secondary);
-    font-size: 13px; font-weight: 600; padding: 8px 6px; border-radius: 8px;
-  }
-  .topbar-link:active { background: var(--pressed); }
+  .top-bar h1 { font-size: 18px; margin: 0; font-weight: 800; }
+  .top-bar .sub { font-size: 12px; color: var(--text-subtle); margin: 4px 0 0; }
 
-  .page { max-width: 640px; margin: 0 auto; padding: 0 0 48px; }
+  .cate-tabs {
+    display: flex; gap: 8px; overflow-x: auto; padding: 12px 20px 12px;
+    -ms-overflow-style: none; scrollbar-width: none;
+  }
+  .cate-tabs::-webkit-scrollbar { display: none; }
+  .cate-tab {
+    flex: 0 0 auto; border: 1px solid var(--border); background: var(--layer); color: var(--text-muted);
+    border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700; white-space: nowrap;
+  }
+  .cate-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
-  .feed { display: flex; flex-direction: column; }
-  .feed-card {
-    display: block; width: 100%; text-align: left; background: var(--layer); border: none;
-    border-bottom: 1px solid var(--divider-regular);
-    padding: 14px 16px; transition: background 150ms var(--ease);
-  }
-  .feed-card:active { background: var(--pressed); }
-  .feed-title {
-    font-size: 14.5px; line-height: 20px; font-weight: 600; color: var(--text-strong);
-    margin: 0 0 4px;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .feed-desc {
-    font-size: 13px; line-height: 19px; color: var(--text-secondary); margin: 0 0 6px;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .feed-dot { color: var(--text-disabled); }
-  .feed-meta-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-tertiary); flex-wrap: wrap; }
+  .feed { max-width: 720px; margin: 0 auto; padding: 12px 16px 0; }
 
-  .empty-state, .loading-state {
-    text-align: center; color: var(--text-tertiary); padding: 64px 20px; font-size: 14px;
+  .card {
+    display: flex; gap: 12px; background: var(--layer); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px; margin-bottom: 10px; cursor: pointer;
+    transition: border-color 120ms ease;
   }
-
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    border: none; border-radius: 12px; font-size: 13px; font-weight: 600;
-    padding: 10px 14px; transition: transform 100ms var(--ease);
+  .card:hover { border-color: var(--primary); }
+  .card-thumb {
+    flex: 0 0 72px; width: 72px; height: 72px; border-radius: 10px; background-color: #EEF0F3;
+    background-size: cover; background-position: center;
   }
-  .btn:active { transform: scale(0.96); }
-  .btn.primary { background: var(--primary); color: var(--white); }
-  .btn.outlined { background: var(--white); color: var(--text-secondary); border: 1px solid var(--border-regular); }
-  .btn.full { width: 100%; }
-  .btn:disabled { opacity: 0.5; pointer-events: none; }
-
+  .card-thumb.no-img { background: linear-gradient(135deg, #EEF0F3, #E3E6EA); }
+  .card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .card-top { display: flex; align-items: center; gap: 6px; min-height: 16px; }
   .badge {
-    font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-pill);
-    white-space: nowrap;
+    font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-weak);
+    padding: 2px 7px; border-radius: 999px;
   }
-  .badge.negative { background: var(--negative-weak); color: var(--negative); }
-  .badge.positive { background: var(--positive-weak); color: var(--positive); }
+  .card-title {
+    margin: 0; font-size: 14px; font-weight: 700; line-height: 19px;
+    overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .card-meta { font-size: 12px; color: var(--text-subtle); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .card-meta .price { color: var(--text); font-weight: 700; }
+  .card-meta .dot { color: var(--border); }
 
-  /* ===== Detail panel ===== */
-  .panel-backdrop {
-    position: fixed; inset: 0; background: var(--dimmed); z-index: 100;
-    opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease);
+  .sentinel {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 20px 0 40px; font-size: 13px; color: var(--text-subtle);
   }
-  .panel-backdrop.open { opacity: 1; pointer-events: auto; }
-  .side-panel {
-    position: fixed; top: 0; right: 0; height: 100vh; width: min(460px, 100vw);
-    background: var(--bg); box-shadow: var(--shadow-sheet);
-    display: flex; flex-direction: column;
-    transform: translateX(100%); transition: transform 250ms var(--ease);
-    z-index: 101;
+  .sentinel.done { color: var(--text-subtle); }
+  .spinner {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border); border-top-color: var(--primary);
+    animation: spin 0.7s linear infinite;
   }
-  .panel-backdrop.open .side-panel { transform: translateX(0); }
-  .panel-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; flex-shrink: 0; background: var(--layer);
-    border-bottom: 1px solid var(--divider-regular);
-  }
-  .panel-header h3 { font-size: 16px; font-weight: 700; margin: 0; color: var(--text-strong); }
-  .panel-header button { background: none; border: none; font-size: 22px; line-height: 1; color: var(--text-tertiary); padding: 4px; }
-  .panel-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  .detail-title { font-size: 17px; line-height: 24px; font-weight: 700; color: var(--text-strong); margin: 0 0 10px; }
-  .detail-content { font-size: 14px; line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; word-break: break-word; margin: 0; }
-  .detail-source-link { margin: 14px 0 0; }
-  .detail-ad-check { margin: 14px 0 0; }
-  .detail-ad-result { margin-top: 8px; }
-
-  .divider { border: none; border-top: 1px solid var(--divider-regular); margin: 18px 0; }
-
-  .comments-title { font-weight: 700; font-size: 14px; margin: 0 0 8px; color: var(--text-strong); }
-  .comments-list { display: flex; flex-direction: column; }
-  .comment-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; }
-  .comment-row + .comment-row { border-top: 1px solid var(--divider-regular); }
-  .comment-avatar {
-    flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
-    background: var(--primary-weak); color: var(--primary-heavy);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700;
-  }
-  .comment-body { flex: 1; min-width: 0; }
-  .comment-meta .name { font-size: 13px; font-weight: 700; color: var(--text-strong); margin-right: 6px; }
-  .comment-meta .time { font-size: 11px; color: var(--text-tertiary); }
-  .comment-text { font-size: 13px; line-height: 1.5; color: var(--text-primary); margin: 3px 0 0; white-space: pre-wrap; word-break: break-word; }
-  .comments-empty { text-align: center; color: var(--text-tertiary); font-size: 13px; padding: 20px 0; }
-
-  .comment-login-box { background: var(--layer); border-radius: 14px; padding: 12px; margin-top: 10px; }
-  .comment-login-box p { font-size: 12px; color: var(--text-secondary); margin: 0 0 8px; font-weight: 600; }
-  .comment-login-row { display: flex; gap: 6px; }
-  .comment-login-row input {
-    flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-regular);
-    background: var(--white); color: var(--text-primary); font-size: 13px; outline: none;
-  }
-  .comment-login-row input:focus { border-color: #99CEFF; }
-
-  .comment-input-row { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
-  .comment-input-row input {
-    flex: 1; padding: 11px 14px; border-radius: var(--radius-pill); border: 1px solid var(--border-regular);
-    background: var(--white); color: var(--text-primary); font-size: 13px; outline: none;
-  }
-  .comment-input-row input:focus { border-color: #99CEFF; }
-  .comment-input-row button {
-    flex-shrink: 0; background: none; border: none; color: var(--primary);
-    font-size: 13px; font-weight: 700; padding: 8px 10px;
-  }
-  .comment-delete-btn {
-    flex-shrink: 0; background: none; border: none; color: var(--text-tertiary);
-    font-size: 16px; line-height: 1; padding: 2px 4px;
-  }
-  .comment-delete-btn:hover { color: var(--negative); }
-
-  /* ===== AI 광고글 판단 모달 ===== */
-  .ai-backdrop {
-    position: fixed; inset: 0; background: var(--dimmed); z-index: 110;
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-    opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease);
-  }
-  .ai-backdrop.open { opacity: 1; pointer-events: auto; }
-  .ai-modal {
-    width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto;
-    background: var(--bg); border-radius: 20px; box-shadow: var(--shadow-sheet);
-    display: flex; flex-direction: column;
-    transform: scale(0.96); transition: transform 200ms var(--ease);
-  }
-  .ai-backdrop.open .ai-modal { transform: scale(1); }
-  .ai-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 14px; }
-  .ai-example-row { display: flex; gap: 8px; margin-bottom: 16px; }
-  .ai-example-row .btn { flex: 1; }
-  .field { margin-bottom: 14px; }
-  .field-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-  .field-input, .field-textarea {
-    width: 100%; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border-regular);
-    background: var(--white); color: var(--text-primary); font-size: 14px; outline: none; font-family: inherit;
-  }
-  .field-input:focus, .field-textarea:focus { border-color: #99CEFF; }
-  .field-textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
-  .ai-result { margin-top: 14px; }
-
-  @media (max-width: 480px) {
-    .side-panel { width: 100vw; }
-  }
-  @media (min-width: 641px) {
-    .page { margin: 16px auto; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 2px rgba(20,26,36,0.04); }
-    .feed-card:last-child { border-bottom: none; }
+  .refresh-toast {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: #fff; font-size: 12px; font-weight: 700;
+    padding: 8px 16px; border-radius: 999px; z-index: 50; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   }
 
-  /* ===== Snackbar ===== */
-  .snackbar {
-    position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%;
-    transform: translateX(-50%) translateY(8px);
-    background: var(--text-strong); color: #fff;
-    padding: 12px 18px; border-radius: var(--radius-pill);
-    font-size: 13px; font-weight: 600; box-shadow: var(--shadow-sheet);
-    z-index: 200; opacity: 0; pointer-events: none;
-    transition: opacity 200ms var(--ease), transform 200ms var(--ease);
-    max-width: 90vw;
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 60;
+    display: flex; align-items: flex-end; justify-content: center;
   }
-  .snackbar.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .detail-panel {
+    background: var(--layer); width: 100%; max-width: 720px; max-height: 86vh;
+    border-radius: 18px 18px 0 0; overflow-y: auto; position: relative;
+    padding: 18px 20px 32px;
+  }
+  @media (min-width: 760px) {
+    .overlay { align-items: center; }
+    .detail-panel { border-radius: 18px; max-height: 80vh; }
+  }
+  .close-btn {
+    position: sticky; top: 0; float: right; border: none; background: var(--bg);
+    color: var(--text-muted); font-size: 12px; font-weight: 700;
+    border-radius: 999px; padding: 6px 12px; margin-left: 12px;
+  }
+  .detail-loading, .detail-error {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 160px; color: var(--text-subtle); font-size: 13px;
+  }
+  .detail-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0 14px; clear: both; }
+  .origin-link { font-size: 12px; color: var(--text-subtle); font-weight: 700; text-decoration: none; }
+  .score-badge { font-size: 13px; font-weight: 800; padding: 6px 12px; border-radius: 999px; }
+  .score-badge.high { color: var(--high); background: var(--high-weak); }
+  .score-badge.mid { color: var(--mid); background: var(--mid-weak); }
+  .score-badge.low { color: var(--low); background: var(--low-weak); }
+  .score-badge.unknown { color: var(--text-subtle); background: var(--bg); }
+  .detail-title { font-size: 17px; font-weight: 800; line-height: 24px; margin: 0 0 14px; }
+  .detail-content { font-size: 14px; line-height: 22px; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+  .detail-content .empty { color: var(--text-subtle); }
+  .detail-images { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 14px; }
+  .detail-image {
+    display: block; max-width: 100%; max-height: 70vh; width: auto; height: auto;
+    border-radius: 10px; background: var(--bg); object-fit: contain;
+  }
+
+  /* ===== 댓글 ===== */
+  .comments-section { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .comments-title { font-size: 14px; font-weight: 800; margin: 0 0 10px; }
+  .comments-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .comments-empty, .comments-loading { font-size: 13px; color: var(--text-subtle); }
+  .comment-item { background: var(--bg); border-radius: 10px; padding: 10px 12px; }
+  .comment-item .comment-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .comment-item .comment-nick { font-size: 12px; font-weight: 800; color: var(--text); }
+  .comment-item .comment-time { font-size: 11px; color: var(--text-subtle); }
+  .comment-item .comment-content { font-size: 13px; line-height: 19px; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+  .comment-form { display: flex; gap: 8px; }
+  .comment-input {
+    flex: 1; border: 1px solid var(--border); border-radius: 999px; padding: 10px 14px;
+    font-size: 13px; outline: none; background: var(--bg);
+  }
+  .comment-input:focus { border-color: var(--primary); }
+  .comment-submit {
+    flex: 0 0 auto; border: none; background: var(--primary); color: #fff;
+    font-size: 13px; font-weight: 800; border-radius: 999px; padding: 10px 16px;
+  }
+  .comment-submit:disabled { opacity: 0.5; cursor: default; }
+
+  /* ===== 원문(퀘이사존) 댓글 — 댓글 리스트 안에 우리 댓글과 함께 섞여서 표시 ===== */
+  .orig-comment-item { display: flex; gap: 10px; margin-bottom: 10px; }
+  .orig-comment-avatar { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #EEF0F3; }
+  .orig-comment-avatar.placeholder { display: inline-block; }
+  .orig-comment-body { flex: 1; min-width: 0; }
+  .orig-comment-top { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+  .orig-comment-nick { font-size: 12px; font-weight: 800; color: var(--text); }
+  .orig-comment-time { font-size: 11px; color: var(--text-subtle); }
+  .orig-comment-content { font-size: 13px; line-height: 19px; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+  .orig-comment-content .empty { color: var(--text-subtle); }
+
+  /* ===== 독립 검증 FAB ===== */
+  .fab {
+    position: fixed; right: 20px; bottom: 24px; z-index: 40;
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: var(--primary); color: #fff; font-size: 12px; font-weight: 800;
+    letter-spacing: 0.3px;
+    box-shadow: 0 6px 18px rgba(255,102,0,0.4);
+  }
+  .fab-panel {
+    background: var(--layer); width: 100%; max-width: 460px; max-height: 86vh;
+    border-radius: 18px 18px 0 0; overflow-y: auto; position: relative; padding: 18px 20px 24px;
+  }
+  @media (min-width: 760px) {
+    .fab-panel { border-radius: 18px; max-height: 80vh; }
+  }
+  .fab-title { font-size: 16px; font-weight: 800; margin: 0 0 14px; }
+  .fab-field { margin-bottom: 10px; }
+  .fab-field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-subtle); margin-bottom: 6px; }
+  .fab-input, .fab-textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    font-size: 14px; outline: none; font-family: inherit; background: var(--bg);
+  }
+  .fab-textarea { min-height: 120px; resize: vertical; }
+  .fab-input:focus, .fab-textarea:focus { border-color: var(--primary); }
+  .fab-submit {
+    width: 100%; border: none; background: var(--primary); color: #fff;
+    font-size: 14px; font-weight: 800; border-radius: 10px; padding: 12px; margin-top: 4px;
+  }
+  .fab-result { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .fab-result .score-number { font-size: 13px; color: var(--text-subtle); }
+
+  /* ===== 닉네임 모달 ===== */
+  .nickname-panel {
+    background: var(--layer); width: 100%; max-width: 320px; border-radius: 18px; padding: 20px;
+  }
+  .nickname-panel h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; }
+  .nickname-panel p { font-size: 12px; color: var(--text-subtle); margin: 0 0 12px; }
+  .nickname-error { font-size: 12px; color: var(--high); margin: 8px 0 0; }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <h1>커뮤니티</h1>
-  <span class="spacer"></span>
-  <button class="topbar-link" onclick="App.openAiCheck()">AI 광고 판단</button>
-  <button class="topbar-link" onclick="App.refresh()">새로고침</button>
+<header class="top-bar">
+  <h1>퀘이사존</h1>
+  <p class="sub">글을 누르면 제목, 본문 기반 광고 여부를 판단한다.</p>
+  <nav class="cate-tabs" id="cateTabs"></nav>
+</header>
+
+<main id="feed" class="feed"></main>
+
+<div class="sentinel" id="sentinel">
+  <div class="spinner"></div>
+  <span id="sentinelText">불러오는 중...</span>
 </div>
 
-<div class="page">
-  <div id="feed" class="feed"></div>
-</div>
+<div class="refresh-toast hidden" id="refreshToast">새로고침 중...</div>
 
-<div id="detailOverlay" class="panel-backdrop hidden" onmousedown="App.onBackdropMouseDown(event)" onclick="App.onOverlayClick(event)">
-  <div class="side-panel">
-    <div class="panel-header">
-      <h3>게시글</h3>
-      <button onclick="App.closeDetail()">&times;</button>
-    </div>
-    <div id="detailBody" class="panel-body"></div>
+<div class="overlay hidden" id="detailOverlay">
+  <div class="detail-panel">
+    <button class="close-btn" id="closeDetailBtn">닫기</button>
+    <div id="detailBody"></div>
   </div>
 </div>
 
-<div id="aiCheckOverlay" class="ai-backdrop hidden" onmousedown="App.onAiBackdropMouseDown(event)" onclick="App.onAiOverlayClick(event)">
-  <div class="ai-modal">
-    <div class="panel-header">
-      <h3>AI 광고글 판단</h3>
-      <button onclick="App.closeAiCheck()">&times;</button>
+<button class="fab" id="adTestFab" title="직접 검증하기">AI</button>
+
+<div class="overlay hidden" id="fabOverlay">
+  <div class="fab-panel">
+    <button class="close-btn" id="closeFabBtn">닫기</button>
+    <h3 class="fab-title">직접 검증하기</h3>
+    <div class="fab-field">
+      <label for="fabTitleInput">제목</label>
+      <input type="text" id="fabTitleInput" class="fab-input" placeholder="제목 (선택)" maxlength="200" />
     </div>
-    <div class="panel-body">
-      <p class="ai-desc">제목과 본문을 입력하면 AI가 광고글인지 판별합니다. 게시글 상세의 "광고인지 판별하기"와 같은 모델을 씁니다.</p>
-      <div class="ai-example-row">
-        <button type="button" class="btn outlined" onclick="App.fillAiExample('normal')">정상글 예시</button>
-        <button type="button" class="btn outlined" onclick="App.fillAiExample('ad')">광고글 예시</button>
-      </div>
-      <div class="field">
-        <label class="field-label">제목</label>
-        <input id="aiCheckTitle" class="field-input" type="text" placeholder="제목을 입력하세요">
-      </div>
-      <div class="field">
-        <label class="field-label">본문</label>
-        <textarea id="aiCheckContent" class="field-textarea" placeholder="본문을 입력하세요"></textarea>
-      </div>
-      <button type="button" class="btn primary full" onclick="App.runAiCheck()">판별하기</button>
-      <div id="aiCheckResult" class="ai-result"></div>
+    <div class="fab-field">
+      <label for="fabContentInput">내용</label>
+      <textarea id="fabContentInput" class="fab-textarea" placeholder="검증하고 싶은 글 내용을 입력하세요"></textarea>
     </div>
+    <button class="fab-submit" id="fabSubmitBtn">판정하기</button>
+    <div class="fab-result hidden" id="fabResult"></div>
   </div>
 </div>
 
-<div id="toast" class="snackbar"><span id="toastText"></span></div>
+<div class="overlay hidden" id="nicknameOverlay">
+  <div class="nickname-panel">
+    <h3>닉네임 설정</h3>
+    <p>댓글 작성에 사용할 닉네임을 입력해주세요.</p>
+    <input type="text" id="nicknameInput" class="fab-input" placeholder="닉네임" aria-label="닉네임" maxlength="30" />
+    <button class="fab-submit" id="nicknameSubmitBtn">확인</button>
+    <p class="nickname-error hidden" id="nicknameError"></p>
+  </div>
+</div>
 
 <script>
-const App = (function () {
+(function () {
+  var PROXY_URL = '/training/api/url';
+  var MODEL_URL = '/training/api/model';
+  var LIST_BASE = 'https://quasarzone.com/bbs/qb_saleinfo';
+  var MAX_PAGE = 5;
 
-  let posts = [];
-  let currentEvaluator = null;
-  let backdropMouseDownOnSelf = false;
-  let currentDetailId = null;
+  var CATEGORIES = [
+    { label: '전체', mode: 'all' },
+    { label: '인기글', mode: 'popular' },
+    { label: 'PC/하드웨어', mode: 'category', value: 'PC/하드웨어' },
+    { label: '상품권/쿠폰', mode: 'category', value: '상품권/쿠폰' },
+    { label: '게임/SW', mode: 'category', value: '게임/SW' },
+    { label: '노트북/모바일', mode: 'category', value: '노트북/모바일' },
+    { label: '가전/TV', mode: 'category', value: '가전/TV' },
+    { label: '생활/식품', mode: 'category', value: '생활/식품' },
+    { label: '패션/의류', mode: 'category', value: '패션/의류' },
+    { label: '포인트/래플', mode: 'category', value: '포인트/래플' },
+    { label: '기타', mode: 'category', value: '기타' }
+  ];
 
-  function toast(message) {
-    document.getElementById('toastText').textContent = message;
-    const el = document.getElementById('toast');
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 1800);
-  }
+  var current = CATEGORIES[0];
+  var page = 0;
+  var loading = false;
+  var exhausted = false;
+  var seenIds = {};
 
-  async function api(url, options) {
-    const res = await fetch(url, Object.assign({
-      headers: { 'Content-Type': 'application/json' }
-    }, options));
-    return res.json();
-  }
+  var feedEl = document.getElementById('feed');
+  var sentinelEl = document.getElementById('sentinel');
+  var sentinelTextEl = document.getElementById('sentinelText');
+  var tabsEl = document.getElementById('cateTabs');
+  var refreshToastEl = document.getElementById('refreshToast');
+  var overlayEl = document.getElementById('detailOverlay');
+  var detailBodyEl = document.getElementById('detailBody');
+  var currentPostId = null;
+
+  var fabEl = document.getElementById('adTestFab');
+  var fabOverlayEl = document.getElementById('fabOverlay');
+  var fabTitleInput = document.getElementById('fabTitleInput');
+  var fabContentInput = document.getElementById('fabContentInput');
+  var fabSubmitBtn = document.getElementById('fabSubmitBtn');
+  var fabResultEl = document.getElementById('fabResult');
+
+  var STORAGE_KEY = 'qzCommunityEvaluator';
+  var currentEvaluator = null;
+  var loginPromise = null;
+  var nicknameOverlayEl = document.getElementById('nicknameOverlay');
+  var nicknameInputEl = document.getElementById('nicknameInput');
+  var nicknameSubmitBtn = document.getElementById('nicknameSubmitBtn');
+  var nicknameErrorEl = document.getElementById('nicknameError');
+  var pendingLoginResolve = null;
 
   function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str == null ? '' : str;
-    return div.innerHTML;
-  }
-
-  function formatDateTime(value) {
-    if (!value) return '';
-    let y, mo, d, h, mi;
-    if (Array.isArray(value)) {
-      [y, mo, d, h, mi] = value;
-    } else {
-      const date = new Date(value);
-      if (isNaN(date.getTime())) return '';
-      y = date.getFullYear(); mo = date.getMonth() + 1; d = date.getDate();
-      h = date.getHours(); mi = date.getMinutes();
-    }
-    const pad = n => String(n).padStart(2, '0');
-    return y + '.' + pad(mo) + '.' + pad(d) + ' ' + pad(h) + ':' + pad(mi);
-  }
-
-  async function checkSession() {
-    const json = await api('/training/api/me');
-    if (json.data) {
-      currentEvaluator = json.data;
-      return;
-    }
-    const savedName = localStorage.getItem('evaluatorName');
-    const savedPin = localStorage.getItem('evaluatorPin');
-    if (savedName && savedPin) {
-      await attemptLogin(savedName, savedPin, true);
-    }
-  }
-
-  async function attemptLogin(name, pin, silent) {
-    const json = await api('/training/api/login', { method: 'POST', body: JSON.stringify({ name, pin }) });
-    if (!json.data) {
-      if (!silent) toast(json.message || '로그인에 실패했습니다.');
-      return false;
-    }
-    currentEvaluator = json.data;
-    localStorage.setItem('evaluatorName', name);
-    localStorage.setItem('evaluatorPin', pin);
-    return true;
-  }
-
-  async function init() {
-    await checkSession();
-    await loadFeed();
-  }
-
-  async function refresh() {
-    await loadFeed();
-  }
-
-  async function loadFeed() {
-    const feed = document.getElementById('feed');
-    feed.innerHTML = '<div class="loading-state">불러오는 중...</div>';
-    const json = await api('/training/api/quasarzone/list');
-    posts = json.data || [];
-    renderFeed();
-  }
-
-  function renderFeed() {
-    const feed = document.getElementById('feed');
-    if (posts.length === 0) {
-      feed.innerHTML = '<div class="empty-state">게시글이 없습니다.</div>';
-      return;
-    }
-    feed.innerHTML = posts.map(renderFeedCard).join('');
-  }
-
-  function renderFeedCard(post) {
-    const metaParts = [];
-    if (post.commentCount) metaParts.push('댓글 ' + escapeHtml(post.commentCount));
-    const createdAtText = formatDateTime(post.createdAt);
-    if (createdAtText) metaParts.push(createdAtText);
-    const metaRow = metaParts.length
-      ? '<div class="feed-meta-row">' + metaParts.join('<span class="feed-dot">·</span>') + '</div>'
-      : '';
-
-    return '' +
-      '<button type="button" class="feed-card" data-post-id="' + escapeHtml(post.id) + '" onclick="App.openDetail(\'' + post.id + '\')">' +
-        '<p class="feed-title">' + escapeHtml(post.title) + '</p>' +
-        (post.content ? '<p class="feed-desc">' + escapeHtml(post.content) + '</p>' : '') +
-        metaRow +
-      '</button>';
-  }
-
-  const detailCache = {};
-
-  async function fetchDetail(postId) {
-    if (detailCache[postId]) return detailCache[postId];
-    const json = await api('/training/api/quasarzone/detail/' + encodeURIComponent(postId));
-    detailCache[postId] = json.data;
-    return json.data;
-  }
-
-  function onBackdropMouseDown(event) {
-    backdropMouseDownOnSelf = (event.target === event.currentTarget);
-  }
-
-  function onOverlayClick(event) {
-    if (event.target.id === 'detailOverlay' && backdropMouseDownOnSelf) closeDetail();
-  }
-
-  async function openDetail(postId) {
-    currentDetailId = postId;
-    const overlay = document.getElementById('detailOverlay');
-    const body = document.getElementById('detailBody');
-    body.innerHTML = '<div class="loading-state">불러오는 중...</div>';
-    overlay.classList.remove('hidden');
-    requestAnimationFrame(() => overlay.classList.add('open'));
-
-    const detail = await fetchDetail(postId);
-    renderDetailBody(postId, detail);
-    loadComments(postId);
-  }
-
-  function renderDetailBody(postId, detail) {
-    const body = document.getElementById('detailBody');
-
-    if (!detail || detail.status !== 'OK') {
-      const reason = detail && detail.status === 'DELETED' ? '삭제되었거나 존재하지 않는 게시글입니다.'
-        : '게시글을 불러올 수 없습니다.';
-      body.innerHTML = '<p class="detail-content">' + escapeHtml(reason) + '</p>' + commentsSectionHtml();
-      renderComments([]);
-      return;
-    }
-    body.innerHTML = '' +
-      '<p class="detail-title">' + escapeHtml(detail.title) + '</p>' +
-      '<p class="detail-content">' + escapeHtml(detail.content) + '</p>' +
-      '<a class="btn outlined detail-source-link" href="' + escapeHtml(detail.link) + '" target="_blank" rel="noopener">원본 보기 ↗</a>' +
-      '<div class="detail-ad-check">' +
-        '<button type="button" class="btn primary full" onclick="App.checkAdInDetail(\'' + postId + '\', this)">광고인지 판별하기</button>' +
-        '<div class="detail-ad-result"></div>' +
-      '</div>' +
-      commentsSectionHtml();
-  }
-
-  async function checkAdInDetail(postId, btn) {
-    const resultEl = btn.parentElement.querySelector('.detail-ad-result');
-    btn.disabled = true;
-    btn.textContent = '확인 중...';
-    try {
-      const detail = await fetchDetail(postId);
-      const text = (detail.title || '') + '\n\n' + (detail.content || '');
-      const json = await api('/training/api/model?text=' + encodeURIComponent(text));
-      resultEl.innerHTML = adPercentBadge(json.data);
-    } catch (e) {
-      toast('판별 중 오류가 발생했습니다.');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '광고인지 판별하기';
-    }
-  }
-
-  function adPercentBadge(confidence) {
-    const ratio = Number(confidence) || 0;
-    const percent = (ratio * 100).toFixed(1);
-    const cls = ratio >= 0.5 ? 'negative' : 'positive';
-    return '<span class="badge ' + cls + '">광고 확률 ' + percent + '%</span>';
-  }
-
-  function commentsSectionHtml() {
-    return '' +
-      '<hr class="divider">' +
-      '<p class="comments-title">댓글 <span id="commentsCount">0</span></p>' +
-      '<div id="commentsList" class="comments-list"></div>' +
-      (currentEvaluator ? loggedInCommentInputHtml() : loggedOutCommentBoxHtml());
-  }
-
-  function loggedInCommentInputHtml() {
-    return '' +
-      '<div class="comment-input-row">' +
-        '<input id="commentInput" type="text" placeholder="댓글을 입력하세요" maxlength="300" onkeydown="if(event.key===\'Enter\'){event.preventDefault();App.submitComment();}">' +
-        '<button type="button" onclick="App.submitComment()">등록</button>' +
-      '</div>';
-  }
-
-  function loggedOutCommentBoxHtml() {
-    return '' +
-      '<div class="comment-login-box">' +
-        '<p>댓글을 쓰려면 이름과 숫자 4자리 비밀번호가 필요해요.</p>' +
-        '<div class="comment-login-row">' +
-          '<input id="commentLoginName" type="text" placeholder="이름" maxlength="20">' +
-          '<input id="commentLoginPin" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 4자리">' +
-          '<button type="button" class="btn primary" onclick="App.loginAndComment()">확인</button>' +
-        '</div>' +
-      '</div>';
-  }
-
-  async function loginAndComment() {
-    const name = document.getElementById('commentLoginName').value.trim();
-    const pin = document.getElementById('commentLoginPin').value.trim();
-    if (!name || !/^[0-9]{4}$/.test(pin)) {
-      toast('이름과 숫자 4자리를 입력해주세요.');
-      return;
-    }
-    const ok = await attemptLogin(name, pin, false);
-    if (ok && currentDetailId) {
-      const body = document.getElementById('detailBody');
-      const old = body.querySelector('.comment-login-box');
-      if (old) old.outerHTML = loggedInCommentInputHtml();
-    }
-  }
-
-  async function loadComments(postId) {
-    const json = await api('/training/api/posts/' + encodeURIComponent(postId) + '/comments');
-    renderComments(json.data || []);
-  }
-
-  function commentRowHtml(c) {
-    const initial = escapeHtml((c.evaluatorName || '?').trim().charAt(0) || '?');
-    const canDelete = currentEvaluator && currentEvaluator.name === c.evaluatorName;
-    return '' +
-      '<div class="comment-row">' +
-        '<div class="comment-avatar">' + initial + '</div>' +
-        '<div class="comment-body">' +
-          '<p class="comment-meta"><span class="name">' + escapeHtml(c.evaluatorName) + '</span><span class="time">' + escapeHtml(formatDateTime(c.createdAt)) + '</span></p>' +
-          '<p class="comment-text">' + escapeHtml(c.content) + '</p>' +
-        '</div>' +
-        (canDelete ? '<button type="button" class="comment-delete-btn" onclick="App.deleteComment(' + c.id + ')">&times;</button>' : '') +
-      '</div>';
-  }
-
-  function renderComments(comments) {
-    const list = document.getElementById('commentsList');
-    if (!list) return;
-    const countEl = document.getElementById('commentsCount');
-    if (countEl) countEl.textContent = comments.length;
-    if (comments.length === 0) {
-      list.innerHTML = '<div class="comments-empty">아직 댓글이 없습니다.</div>';
-      return;
-    }
-    list.innerHTML = comments.map(commentRowHtml).join('');
-  }
-
-  async function submitComment() {
-    const input = document.getElementById('commentInput');
-    const content = input.value.trim();
-    if (!content || !currentDetailId) return;
-    const json = await api('/training/api/posts/' + encodeURIComponent(currentDetailId) + '/comments', {
-      method: 'POST', body: JSON.stringify({ content })
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
-    if (!json.data) {
-      toast('댓글 등록에 실패했습니다.');
-      return;
-    }
-    input.value = '';
-    loadComments(currentDetailId);
   }
 
-  async function deleteComment(commentId) {
-    await api('/training/api/comments/' + commentId, { method: 'DELETE' });
-    if (currentDetailId) loadComments(currentDetailId);
+  function renderTabs() {
+    tabsEl.innerHTML = CATEGORIES.map(function (c, i) {
+      return '<button class="cate-tab' + (c === current ? ' active' : '') + '" data-i="' + i + '">' +
+        escapeHtml(c.label) + '</button>';
+    }).join('');
   }
+
+  tabsEl.addEventListener('click', function (e) {
+    var btn = e.target.closest('.cate-tab');
+    if (!btn) return;
+    var next = CATEGORIES[Number(btn.dataset.i)];
+    if (next === current) return;
+    current = next;
+    renderTabs();
+    resetAndLoad();
+  });
+
+  function buildListUrl(p) {
+    var u = new URL(LIST_BASE);
+    u.searchParams.set('page', p);
+    if (current.mode === 'popular') {
+      u.searchParams.set('popularity', 'Y');
+    } else if (current.mode === 'category') {
+      u.searchParams.set('category', current.value);
+    }
+    return u.toString();
+  }
+
+  function fetchHtml(targetUrl) {
+    return fetch(PROXY_URL + '?url=' + encodeURIComponent(targetUrl)).then(function (res) {
+      if (!res.ok) throw new Error('network error');
+      return res.text();
+    });
+  }
+
+  function parseListHtml(html) {
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    var rows = doc.querySelectorAll('.v2-list-row[data-qc-id]');
+    var items = [];
+    rows.forEach(function (row) {
+      var id = row.getAttribute('data-qc-id');
+      var titleEl = row.querySelector('.subject-link');
+      var title = titleEl ? titleEl.textContent.trim() : '';
+      if (!id || !title) return;
+
+      var badgeEl = row.querySelector('.v2-badge');
+      var priceEl = row.querySelector('.v2-list-row__price');
+      var nickEl = row.querySelector('.user-nick-label');
+      var timeEl = row.querySelector('.v2-list-row__time');
+      var commentEl = row.querySelector('.ctn-count');
+      var thumbEl = row.querySelector('.v2-list-row__thumb');
+
+      var thumb = '';
+      if (thumbEl) {
+        var style = thumbEl.getAttribute('style') || '';
+        var m = /url\((['"]?)(.*?)\1\)/.exec(style);
+        if (m) thumb = m[2];
+      }
+
+      items.push({
+        id: id,
+        title: title,
+        category: badgeEl ? badgeEl.textContent.trim() : '',
+        price: priceEl ? priceEl.textContent.trim() : '',
+        nick: nickEl ? nickEl.textContent.trim() : '',
+        time: timeEl ? timeEl.textContent.trim() : '',
+        commentCount: commentEl ? commentEl.textContent.trim() : '0',
+        thumb: thumb
+      });
+    });
+    return items;
+  }
+
+  function cardHtml(item) {
+    var thumbAttr = item.thumb ? ' style="background-image:url(\'' + escapeHtml(item.thumb) + '\')"' : '';
+    return '' +
+      '<article class="card" data-id="' + escapeHtml(item.id) + '">' +
+        '<div class="card-thumb' + (item.thumb ? '' : ' no-img') + '"' + thumbAttr + '></div>' +
+        '<div class="card-body">' +
+          '<div class="card-top">' +
+            (item.category ? '<span class="badge">' + escapeHtml(item.category) + '</span>' : '') +
+          '</div>' +
+          '<p class="card-title">' + escapeHtml(item.title) + '</p>' +
+          '<div class="card-meta">' +
+            (item.price ? '<span class="price">' + escapeHtml(item.price) + '</span><span class="dot">·</span>' : '') +
+            '<span class="nick">' + escapeHtml(item.nick) + '</span>' +
+            '<span class="dot">·</span>' +
+            '<span class="time">' + escapeHtml(item.time) + '</span>' +
+            '<span class="dot">·</span>' +
+            '<span class="comment">댓글 ' + escapeHtml(item.commentCount) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+  }
+
+  feedEl.addEventListener('click', function (e) {
+    var card = e.target.closest('.card');
+    if (!card) return;
+    openDetail(card.dataset.id);
+  });
+
+  function updateSentinel() {
+    if (exhausted) {
+      sentinelEl.classList.add('done');
+      sentinelTextEl.textContent = page === 0 ? '표시할 글이 없습니다.' : '마지막 페이지입니다 (총 ' + page + '페이지)';
+    } else {
+      sentinelEl.classList.remove('done');
+      sentinelTextEl.textContent = loading ? '불러오는 중...' : '스크롤하면 더 불러옵니다';
+    }
+  }
+
+  function loadNextPage() {
+    if (loading || exhausted) return Promise.resolve();
+    loading = true;
+    updateSentinel();
+
+    var nextPage = page + 1;
+    return fetchHtml(buildListUrl(nextPage)).then(function (html) {
+      var items = parseListHtml(html).filter(function (it) { return !seenIds[it.id]; });
+      items.forEach(function (it) { seenIds[it.id] = true; });
+
+      if (items.length === 0 && nextPage > 1) {
+        exhausted = true;
+      } else {
+        feedEl.insertAdjacentHTML('beforeend', items.map(cardHtml).join(''));
+        page = nextPage;
+        if (page >= MAX_PAGE) exhausted = true;
+      }
+    }).catch(function (err) {
+      console.error(err);
+      sentinelTextEl.textContent = '불러오기 실패. 잠시 후 다시 시도해주세요.';
+    }).finally(function () {
+      loading = false;
+      updateSentinel();
+    });
+  }
+
+  function resetState() {
+    page = 0;
+    exhausted = false;
+    loading = false;
+    seenIds = {};
+    feedEl.innerHTML = '';
+    updateSentinel();
+  }
+
+  function resetAndLoad() {
+    resetState();
+    loadNextPage();
+  }
+
+  function doRefresh() {
+    if (loading) return;
+    refreshToastEl.classList.remove('hidden');
+    resetState();
+    loadNextPage().finally(function () {
+      refreshToastEl.classList.add('hidden');
+    });
+  }
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) loadNextPage();
+    });
+  }, { rootMargin: '400px 0px' });
+  observer.observe(sentinelEl);
+
+  // 스크롤이 이미 맨 위(0)에 닿아있는 상태에서 "더 위로" 올리려는 제스처(마우스 휠을 위로,
+  // 또는 손가락을 아래로 끄는 당기기)가 들어올 때마다 새로고침한다. scrollTop은 0 밑으로
+  // 못 내려가서 스크롤 위치 변화만으로는 이 "벽에 닿는" 시도를 구분할 수 없으니, wheel/touch
+  // 제스처 자체를 본다.
+  var lastRefreshAt = 0;
+  var REFRESH_COOLDOWN_MS = 2500;
+
+  function isAtTop() {
+    return (window.scrollY || document.documentElement.scrollTop) <= 0;
+  }
+
+  function triggerTopPullRefresh() {
+    if (loading) return;
+    if (Date.now() - lastRefreshAt <= REFRESH_COOLDOWN_MS) return;
+    lastRefreshAt = Date.now();
+    doRefresh();
+  }
+
+  window.addEventListener('wheel', function (e) {
+    if (isAtTop() && e.deltaY < 0) {
+      triggerTopPullRefresh();
+    }
+  }, { passive: true });
+
+  var touchStartY = null;
+  window.addEventListener('touchstart', function (e) {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  window.addEventListener('touchmove', function (e) {
+    if (touchStartY === null) return;
+    var currentY = e.touches[0].clientY;
+    var pulledDown = currentY - touchStartY > 15;
+    if (isAtTop() && pulledDown) {
+      triggerTopPullRefresh();
+      touchStartY = currentY;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchend', function () {
+    touchStartY = null;
+  });
+
+  // ===== 상세보기 =====
+
+  document.getElementById('closeDetailBtn').addEventListener('click', closeDetail);
+  overlayEl.addEventListener('click', function (e) {
+    if (e.target === overlayEl) closeDetail();
+  });
 
   function closeDetail() {
-    const overlay = document.getElementById('detailOverlay');
-    overlay.classList.remove('open');
-    setTimeout(() => overlay.classList.add('hidden'), 250);
-    currentDetailId = null;
+    overlayEl.classList.add('hidden');
+    detailBodyEl.innerHTML = '';
   }
 
-  const AI_EXAMPLES = {
-    normal: {
-      title: 'Columbia 남성용 Plateau 하이킹 슈즈',
-      content: '295 사이즈만 있네요 방수 기능 없고 막 싼거 같진 않고요 가격 자체는 나쁘지 않은거 같네요'
-    },
-    ad: {
-      title: '🔥🔥역대급 특가🔥🔥 무선청소기 오늘만 이 가격!!',
-      content: '지금 바로 확인하세요!! 선착순 100명 한정!! 놓치면 후회합니다 ㅠㅠ 👉 bit.ly/○○○'
+  function parseDetailHtml(html) {
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+
+    var title = '';
+    var metaTitle = doc.querySelector('meta[name="title"]') || doc.querySelector('meta[property="og:title"]');
+    if (metaTitle) title = (metaTitle.getAttribute('content') || '').trim();
+    if (!title && doc.title) title = doc.title.split('>')[0].trim();
+
+    var content = '';
+    var images = [];
+    var newContents = doc.querySelector('#new_contents');
+    if (newContents && newContents.textContent && newContents.textContent.trim()) {
+      content = newContents.textContent.trim();
+      images = extractImageUrls(newContents);
     }
-  };
-
-  let aiBackdropMouseDownOnSelf = false;
-
-  function openAiCheck() {
-    document.getElementById('aiCheckResult').innerHTML = '';
-    const overlay = document.getElementById('aiCheckOverlay');
-    overlay.classList.remove('hidden');
-    requestAnimationFrame(() => overlay.classList.add('open'));
-  }
-
-  function closeAiCheck() {
-    const overlay = document.getElementById('aiCheckOverlay');
-    overlay.classList.remove('open');
-    setTimeout(() => overlay.classList.add('hidden'), 200);
-  }
-
-  function onAiBackdropMouseDown(event) {
-    aiBackdropMouseDownOnSelf = (event.target === event.currentTarget);
-  }
-
-  function onAiOverlayClick(event) {
-    if (event.target.id === 'aiCheckOverlay' && aiBackdropMouseDownOnSelf) closeAiCheck();
-  }
-
-  function fillAiExample(type) {
-    const example = AI_EXAMPLES[type];
-    if (!example) return;
-    document.getElementById('aiCheckTitle').value = example.title;
-    document.getElementById('aiCheckContent').value = example.content;
-    document.getElementById('aiCheckResult').innerHTML = '';
-  }
-
-  async function runAiCheck() {
-    const title = document.getElementById('aiCheckTitle').value.trim();
-    const content = document.getElementById('aiCheckContent').value.trim();
-    const resultEl = document.getElementById('aiCheckResult');
-    if (!title && !content) {
-      toast('제목이나 본문을 입력해주세요.');
-      return;
+    if (!content) {
+      var org = doc.querySelector('#org_contents');
+      if (org) {
+        var raw = (org.value !== undefined && org.value !== '') ? org.value : org.getAttribute('value');
+        if (raw) {
+          var tmp = document.createElement('div');
+          tmp.innerHTML = raw;
+          content = tmp.textContent.trim();
+          images = extractImageUrls(tmp);
+        }
+      }
     }
-    resultEl.innerHTML = '<span class="badge positive">판별 중...</span>';
+    if (!content) {
+      var desc = doc.querySelector('meta[name="description"]') || doc.querySelector('meta[property="og:description"]');
+      if (desc) content = (desc.getAttribute('content') || '').trim();
+    }
+
+    return { title: title, content: content, images: images, originalComments: parseOriginalComments(doc) };
+  }
+
+  // 본문 컨테이너(#new_contents 또는 #org_contents 디코딩 결과) 안의 <img>를 절대 URL로 뽑아낸다.
+  function extractImageUrls(containerEl) {
+    var urls = [];
+    containerEl.querySelectorAll('img').forEach(function (img) {
+      var src = img.getAttribute('src') || img.getAttribute('data-original') || img.getAttribute('data-src');
+      if (src) urls.push(resolveQzUrl(src.trim()));
+    });
+    return urls;
+  }
+
+  function resolveQzUrl(url) {
+    if (!url) return url;
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.indexOf('//') === 0) return 'https:' + url;
+    if (url.indexOf('/') === 0) return 'https://quasarzone.com' + url;
+    return url;
+  }
+
+  // 퀘이사존 상세페이지 응답에 서버사이드 렌더링되어 함께 오는 원문 댓글(<li id="comment...">)을 파싱한다.
+  function parseOriginalComments(doc) {
+    var items = doc.querySelectorAll('li[id^="comment"]');
+    var comments = [];
+    items.forEach(function (li) {
+      var nickEl = li.querySelector('.nick');
+      var nick = nickEl ? nickEl.textContent.trim() : '';
+      var contentEl = li.querySelector('.note-editor');
+      var content = contentEl ? contentEl.textContent.trim() : '';
+      if (!nick && !content) return;
+
+      var timeEl = li.querySelector('.dateArea');
+      var time = timeEl ? (timeEl.getAttribute('title') || timeEl.textContent.trim()) : '';
+      var avatarEl = li.querySelector('.profileImg');
+      var avatar = avatarEl ? avatarEl.getAttribute('src') : '';
+
+      comments.push({ nick: nick, content: content, time: time, avatar: avatar });
+    });
+    return comments;
+  }
+
+  function originalCommentItemHtml(c) {
+    var avatarHtml = c.avatar
+      ? '<img class="orig-comment-avatar" src="' + escapeHtml(c.avatar) + '" alt="" />'
+      : '<span class="orig-comment-avatar placeholder"></span>';
+    return '' +
+      '<div class="orig-comment-item">' +
+        avatarHtml +
+        '<div class="orig-comment-body">' +
+          '<div class="orig-comment-top">' +
+            '<span class="orig-comment-nick">' + escapeHtml(c.nick || '익명') + '</span>' +
+            '<span class="orig-comment-time">' + escapeHtml(c.time || '') + '</span>' +
+          '</div>' +
+          '<div class="orig-comment-content">' +
+            (c.content ? escapeHtml(c.content) : '<span class="empty">(내용 없음)</span>') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function fetchAdScore(title, content) {
+    var text = (title + '\n' + content).trim();
+    if (!text) return Promise.resolve(null);
+    return fetch(MODEL_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text })
+    }).then(function (res) {
+      if (!res.ok) return null;
+      return res.json();
+    }).then(function (json) {
+      return (json && typeof json.data === 'number') ? json.data : null;
+    }).catch(function (err) {
+      console.error(err);
+      return null;
+    });
+  }
+
+  function scoreBadgeHtml(score) {
+    if (score === null || score === undefined || Number.isNaN(score)) {
+      return '<span class="score-badge unknown">판정 불가</span>';
+    }
+    var pct = Math.round(score * 100);
+    var cls = 'low';
+    if (score >= 0.7) cls = 'high';
+    else if (score >= 0.4) cls = 'mid';
+    return '<span class="score-badge ' + cls + '">광고 확률 ' + pct + '%</span>';
+  }
+
+  function renderDetail(id, title, content, score, images, originalComments) {
+    var link = 'https://quasarzone.com/bbs/qb_saleinfo/views/' + id;
+    detailBodyEl.innerHTML = '' +
+      '<div class="detail-head">' +
+        scoreBadgeHtml(score) +
+        '<a class="origin-link" href="' + escapeHtml(link) + '" target="_blank" rel="noopener">원문 보기 ↗</a>' +
+      '</div>' +
+      '<h2 class="detail-title">' + escapeHtml(title || '(제목 없음)') + '</h2>' +
+      '<div class="detail-content">' +
+        (content ? escapeHtml(content) : '<span class="empty">본문 내용이 없습니다.</span>') +
+      '</div>' +
+      (images.length
+        ? '<div class="detail-images">' + images.map(function (src) {
+            return '<img class="detail-image" src="' + escapeHtml(src) + '" loading="lazy" alt="" />';
+          }).join('') + '</div>'
+        : '') +
+      '<div class="comments-section">' +
+        '<h3 class="comments-title">댓글</h3>' +
+        '<div class="comments-list" id="commentsList">' +
+          originalComments.map(originalCommentItemHtml).join('') +
+          '<p class="comments-loading" id="commentsLoading">댓글 불러오는 중...</p>' +
+        '</div>' +
+        '<form class="comment-form" id="commentForm">' +
+          '<input type="text" id="commentInput" class="comment-input" placeholder="댓글을 입력하세요" maxlength="500" autocomplete="off" />' +
+          '<button type="submit" class="comment-submit" id="commentSubmitBtn">등록</button>' +
+        '</form>' +
+      '</div>';
+  }
+
+  function openDetail(id) {
+    currentPostId = null;
+    overlayEl.classList.remove('hidden');
+    detailBodyEl.innerHTML = '<div class="detail-loading"><div class="spinner"></div><span>불러오는 중...</span></div>';
+
+    var link = 'https://quasarzone.com/bbs/qb_saleinfo/views/' + id;
+    fetchHtml(link).then(function (html) {
+      if (!html) throw new Error('empty response');
+      var parsed = parseDetailHtml(html);
+      return fetchAdScore(parsed.title, parsed.content).then(function (score) {
+        renderDetail(id, parsed.title, parsed.content, score, parsed.images, parsed.originalComments);
+        return ensurePost(parsed.title, parsed.content, link);
+      });
+    }).then(function (postId) {
+      currentPostId = postId;
+      if (postId) loadComments(postId);
+    }).catch(function (err) {
+      console.error(err);
+      detailBodyEl.innerHTML = '<p class="detail-error">불러오기에 실패했습니다.</p>';
+    });
+  }
+
+  // ===== 댓글 (우리 서비스 DB) =====
+
+  function ensurePost(title, content, sourceUrl) {
+    return fetch('/training/api/quasarzone/ensure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: title, content: content, sourceUrl: sourceUrl })
+    }).then(function (res) {
+      if (!res.ok) return null;
+      return res.json();
+    }).then(function (json) {
+      return (json && json.data) ? json.data.postId : null;
+    }).catch(function (err) {
+      console.error(err);
+      return null;
+    });
+  }
+
+  function commentItemHtml(comment) {
+    return '' +
+      '<div class="comment-item">' +
+        '<div class="comment-top">' +
+          '<span class="comment-nick">' + escapeHtml(comment.evaluatorName) + '</span>' +
+          '<span class="comment-time">' + escapeHtml(comment.createdAt || '') + '</span>' +
+        '</div>' +
+        '<div class="comment-content">' + escapeHtml(comment.content) + '</div>' +
+      '</div>';
+  }
+
+  function loadComments(postId) {
+    var listEl = document.getElementById('commentsList');
+    fetch('/training/api/posts/' + postId + '/comments').then(function (res) {
+      return res.json();
+    }).then(function (json) {
+      if (!listEl) return;
+      var ours = (json && json.data) ? json.data : [];
+      var loadingEl = document.getElementById('commentsLoading');
+      if (loadingEl) loadingEl.remove();
+      if (ours.length) {
+        listEl.insertAdjacentHTML('beforeend', ours.map(commentItemHtml).join(''));
+      }
+      if (!listEl.children.length) {
+        listEl.innerHTML = '<p class="comments-empty">아직 댓글이 없습니다.</p>';
+      }
+    }).catch(function (err) {
+      console.error(err);
+      var loadingEl = document.getElementById('commentsLoading');
+      if (loadingEl) loadingEl.textContent = '댓글을 불러오지 못했습니다.';
+    });
+  }
+
+  detailBodyEl.addEventListener('submit', function (e) {
+    var form = e.target.closest('#commentForm');
+    if (!form) return;
+    e.preventDefault();
+    if (!currentPostId) return;
+
+    var input = document.getElementById('commentInput');
+    var submitBtn = document.getElementById('commentSubmitBtn');
+    var content = (input.value || '').trim();
+    if (!content) return;
+
+    submitBtn.disabled = true;
+    ensureLoggedIn().then(function () {
+      return fetch('/training/api/posts/' + currentPostId + '/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content })
+      });
+    }).then(function (res) {
+      if (!res || !res.ok) throw new Error('comment submit failed');
+      input.value = '';
+      loadComments(currentPostId);
+    }).catch(function (err) {
+      console.error(err);
+    }).finally(function () {
+      submitBtn.disabled = false;
+    });
+  });
+
+  // ===== 닉네임 로그인 (댓글 작성자 식별) =====
+  // 최초 입장 시 로그인 기록이 없으면 닉네임 모달을 띄우고, pin은 랜덤 4자리를 만들어 자동으로
+  // 회원가입(또는 기존 이름이면 pin 덮어쓰기)시킨다. 성공하면 로컬에 저장해 다음 방문부터는
+  // 모달 없이 조용히 자동 로그인된다.
+
+  function randomPin() {
+    return String(Math.floor(1000 + Math.random() * 9000));
+  }
+
+  function saveCredential(name, pin) {
     try {
-      const text = title + '\n\n' + content;
-      const json = await api('/training/api/model?text=' + encodeURIComponent(text));
-      resultEl.innerHTML = adPercentBadge(json.data);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name, pin: pin }));
+    } catch (e) { /* localStorage 사용 불가 환경 무시 */ }
+  }
+
+  function loadCredential() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
     } catch (e) {
-      resultEl.innerHTML = '';
-      toast('판별 중 오류가 발생했습니다.');
+      return null;
     }
   }
 
-  init();
+  function loginWithCredential(name, pin) {
+    return fetch('/training/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, pin: pin })
+    }).then(function (res) { return res.json(); });
+  }
 
-  return {
-    refresh, checkAdInDetail,
-    openDetail, closeDetail, onBackdropMouseDown, onOverlayClick,
-    submitComment, deleteComment, loginAndComment,
-    openAiCheck, closeAiCheck, onAiBackdropMouseDown, onAiOverlayClick,
-    fillAiExample, runAiCheck
-  };
+  function registerCommunityEvaluator(name, pin) {
+    return fetch('/training/api/community-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, pin: pin })
+    }).then(function (res) { return res.json(); });
+  }
+
+  function initLogin() {
+    var saved = loadCredential();
+    if (!saved || !saved.name || !saved.pin) {
+      return openNicknamePrompt();
+    }
+    return loginWithCredential(saved.name, saved.pin).then(function (json) {
+      if (json && json.data && json.data.id) {
+        currentEvaluator = json.data;
+        return currentEvaluator;
+      }
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* 무시 */ }
+      return openNicknamePrompt();
+    }).catch(function () {
+      return openNicknamePrompt();
+    });
+  }
+
+  function ensureLoggedIn() {
+    if (currentEvaluator) return Promise.resolve(currentEvaluator);
+    if (!loginPromise) loginPromise = initLogin();
+    return loginPromise;
+  }
+
+  function openNicknamePrompt() {
+    nicknameErrorEl.classList.add('hidden');
+    nicknameInputEl.value = '';
+    nicknameOverlayEl.classList.remove('hidden');
+    nicknameInputEl.focus();
+    return new Promise(function (resolve) {
+      pendingLoginResolve = resolve;
+    });
+  }
+
+  function submitNickname() {
+    var name = (nicknameInputEl.value || '').trim();
+    if (!name) return;
+
+    var pin = randomPin();
+    nicknameSubmitBtn.disabled = true;
+    registerCommunityEvaluator(name, pin).then(function (json) {
+      if (json && json.data && json.data.id) {
+        currentEvaluator = json.data;
+        saveCredential(name, pin);
+        nicknameOverlayEl.classList.add('hidden');
+        if (pendingLoginResolve) {
+          pendingLoginResolve(currentEvaluator);
+          pendingLoginResolve = null;
+        }
+      } else {
+        nicknameErrorEl.textContent = json && json.message ? json.message : '등록에 실패했습니다. 다시 시도해주세요.';
+        nicknameErrorEl.classList.remove('hidden');
+      }
+    }).catch(function (err) {
+      console.error(err);
+      nicknameErrorEl.textContent = '로그인 중 오류가 발생했습니다.';
+      nicknameErrorEl.classList.remove('hidden');
+    }).finally(function () {
+      nicknameSubmitBtn.disabled = false;
+    });
+  }
+
+  nicknameSubmitBtn.addEventListener('click', submitNickname);
+  nicknameInputEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') submitNickname();
+  });
+
+  // ===== 독립 검증 FAB (모델에 자유 텍스트 테스트) =====
+
+  fabEl.addEventListener('click', function () {
+    fabResultEl.classList.add('hidden');
+    fabResultEl.innerHTML = '';
+    fabTitleInput.value = '';
+    fabContentInput.value = '';
+    fabOverlayEl.classList.remove('hidden');
+  });
+
+  document.getElementById('closeFabBtn').addEventListener('click', function () {
+    fabOverlayEl.classList.add('hidden');
+  });
+
+  fabOverlayEl.addEventListener('click', function (e) {
+    if (e.target === fabOverlayEl) fabOverlayEl.classList.add('hidden');
+  });
+
+  fabSubmitBtn.addEventListener('click', function () {
+    var title = fabTitleInput.value || '';
+    var content = fabContentInput.value || '';
+    if (!title.trim() && !content.trim()) return;
+
+    fabSubmitBtn.disabled = true;
+    fabResultEl.classList.remove('hidden');
+    fabResultEl.innerHTML = '<div class="spinner"></div><span>판정 중...</span>';
+
+    fetchAdScore(title, content).then(function (score) {
+      var pctText = (score === null || score === undefined) ? '' :
+        '<span class="score-number">' + (score * 100).toFixed(1) + '%</span>';
+      fabResultEl.innerHTML = scoreBadgeHtml(score) + pctText;
+    }).finally(function () {
+      fabSubmitBtn.disabled = false;
+    });
+  });
+
+  renderTabs();
+  loadNextPage();
+  loginPromise = initLogin();
 })();
 </script>
 </body>

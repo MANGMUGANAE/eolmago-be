@@ -3,6 +3,7 @@ package com.mangmuganae.eolmago.domain.training.controller;
 import com.mangmuganae.eolmago.domain.training.entity.Evaluator;
 import com.mangmuganae.eolmago.domain.training.service.TrainingService;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
+import com.mangmuganae.eolmago.infra.impersonator.ImpersonatorUtil;
 import jakarta.servlet.http.HttpSession;
 import jakarta.websocket.server.PathParam;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.Response;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,6 +33,8 @@ public class TrainingApiController {
 
   private final TrainingService trainingService;
 
+  private final ImpersonatorUtil impersonatorUtil;
+
   public record LoginRequest(String name, String pin) {
 
   }
@@ -43,9 +47,24 @@ public class TrainingApiController {
 
   }
 
+  @GetMapping("/api/url")
+  public String requestUrl(@RequestParam String url) {
+    return impersonatorUtil.requestUrl(url);
+  }
+
   @GetMapping("/api/model")
   public ResponseDTO<?> model(@RequestParam String text) {
     return ResponseDTO.of(trainingService.getModelValue(text), "요청성공");
+  }
+
+  public record ModelRequest(String text) {
+
+  }
+
+  // 본문이 길면 GET 쿼리스트링 길이를 넘길 수 있어 POST로도 받는다.
+  @PostMapping("/api/model")
+  public ResponseDTO<?> modelPost(@RequestBody ModelRequest request) {
+    return ResponseDTO.of(trainingService.getModelValue(request.text()), "요청성공");
   }
 
   @GetMapping("/api/quasarzone/list")
@@ -56,6 +75,19 @@ public class TrainingApiController {
   @GetMapping("/api/quasarzone/detail/{postId}")
   public ResponseDTO<Map<String, Object>> quasarzoneDetail(@PathVariable String postId) {
     return ResponseDTO.of(trainingService.fetchQuasarzoneDetail(postId), "조회 성공");
+  }
+
+  public record EnsurePostRequest(String title, String content, String sourceUrl) {
+
+  }
+
+  // 외부(퀘이사존)에서 긁어온 글에 우리 서비스 댓글을 달기 위해 내부 postId를 확보한다.
+  @PostMapping("/api/quasarzone/ensure")
+  public ResponseDTO<Map<String, Object>> ensureQuasarzonePost(@RequestBody EnsurePostRequest request) {
+    var post = trainingService.ensureQuasarzonePost(request.title(), request.content(), request.sourceUrl());
+    Map<String, Object> data = new HashMap<>();
+    data.put("postId", post.getId());
+    return ResponseDTO.of(data, "조회 성공");
   }
 
   @PostMapping("/api/login")
@@ -70,6 +102,18 @@ public class TrainingApiController {
           return ResponseDTO.of(data, "로그인 성공");
         })
         .orElseGet(() -> ResponseDTO.of("비밀번호가 일치하지 않습니다."));
+  }
+
+  // 커뮤니티 페이지 전용: 닉네임만 입력하면 랜덤 pin으로 가입/덮어쓰기하고 즉시 로그인시킨다.
+  @PostMapping("/api/community-login")
+  public ResponseDTO<Map<String, Object>> communityLogin(@RequestBody LoginRequest request, HttpSession session) {
+    Evaluator evaluator = trainingService.registerCommunityEvaluator(request.name(), request.pin());
+    session.setAttribute(SESSION_EVALUATOR_ID, evaluator.getId());
+    session.setAttribute(SESSION_EVALUATOR_NAME, evaluator.getName());
+    Map<String, Object> data = new HashMap<>();
+    data.put("id", evaluator.getId());
+    data.put("name", evaluator.getName());
+    return ResponseDTO.of(data, "로그인 성공");
   }
 
   @PostMapping("/api/logout")

@@ -35,6 +35,11 @@ public class EvaluatorRepository {
         .findFirst();
   }
 
+  public void updatePin(Long id, String pin) {
+    String sql = "update evaluator set pin = ? where id = ?";
+    jdbcTemplate.update(sql, pin, id);
+  }
+
   public Evaluator save(String name, String pin) {
     String sql = "insert into evaluator (name, pin, created_at) values (?, ?, now())";
     KeyHolder keyHolder = new GeneratedKeyHolder();
