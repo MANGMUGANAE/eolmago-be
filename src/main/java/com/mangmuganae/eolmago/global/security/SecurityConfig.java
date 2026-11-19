@@ -18,8 +18,10 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
                 "/users/**",
-                "/training/**",
-                "/q/**"
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/v3/api-docs/**",
+                "/auth/**"
             ).permitAll()
             .anyRequest().authenticated()
         );
