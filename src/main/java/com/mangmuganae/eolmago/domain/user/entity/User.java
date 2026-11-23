@@ -1,12 +1,14 @@
 package com.mangmuganae.eolmago.domain.user.entity;
 
 
+import com.mangmuganae.eolmago.global.common.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,8 +17,9 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,6 +41,7 @@ public class User {
   private Integer reportedCount; //누적 신고받은 회수
   private Integer likeRate; //누적 좋아요 비율
 
+  @Enumerated(EnumType.STRING)
   private Role role;
 
   private Integer userReliabillityScore; //사용자 신뢰도
