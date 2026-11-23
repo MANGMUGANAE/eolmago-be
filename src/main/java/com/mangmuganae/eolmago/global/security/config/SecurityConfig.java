@@ -1,4 +1,4 @@
-package com.mangmuganae.eolmago.global.security;
+package com.mangmuganae.eolmago.global.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
