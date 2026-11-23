@@ -1,7 +1,14 @@
 package com.mangmuganae.eolmago.global.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mangmuganae.eolmago.domain.user.entity.User;
 import com.mangmuganae.eolmago.domain.user.repository.UserRepository;
+import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
+import com.mangmuganae.eolmago.global.exception.ErrorCode;
+import com.mangmuganae.eolmago.global.security.core.CustomUserDetails;
+import com.mangmuganae.eolmago.global.security.exception.InvalidAccessJwtException;
+import com.mangmuganae.eolmago.global.security.exception.InvalidRefrashJwtException;
+import com.mangmuganae.eolmago.global.security.exception.UserNotFoundException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,15 +54,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     if(token != null) {
       try {
         jwtTokenProvider.validateToken(token);
-
-        String userUuid = jwtTokenProvider.getUserUuidFromToken(token);
-
-        if(userRepository.findByUuid(userUuid).isEmpty()
-            && jwtTokenProvider.getRoleFromToken(token) != Role.GUEST) {
-          handleUserNotFound(response);
-          return;
-        }
-
 
         log.info("[" + request.getRemoteAddr() + "]:"
             + "[" + method + ":" + url + "](allowed)");
