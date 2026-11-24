@@ -4,6 +4,7 @@ import com.mangmuganae.eolmago.domain.auth.dto.RefreshResponseDto;
 import com.mangmuganae.eolmago.domain.auth.service.AuthService;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
 import com.mangmuganae.eolmago.global.security.core.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,12 +19,11 @@ public class AuthController {
   private final AuthService authService;
 
   @PostMapping("/refresh")
-  public ResponseDTO<RefreshResponseDto> authRefresh(@AuthenticationPrincipal CustomUserDetails userDetails) {
+  public ResponseDTO<RefreshResponseDto> authRefresh(HttpServletRequest request) {
 
-    String uuid = userDetails.getUuid();
+    RefreshResponseDto refreshResponseDto = authService.authRefresh(request);
 
-
-
+    return ResponseDTO.of(refreshResponseDto, "발급에 성공하였습니다.");
   }
 
 }

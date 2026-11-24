@@ -2,8 +2,10 @@ package com.mangmuganae.eolmago.global.config;
 
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
-import io.swagger.v3.oas.models.OpenAPI;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +14,15 @@ import org.springframework.context.annotation.Configuration;
     servers = {
         @Server(url = "https://api.eolmago.co.kr", description = "prod"),
         @Server(url = "http://localhost:8080", description = "local")
-    }
+    },
+    security = @SecurityRequirement(name = "bearerAuth")
+)
+@SecurityScheme(
+    name = "bearerAuth",
+    type = SecuritySchemeType.HTTP,
+    scheme = "bearer",
+    bearerFormat = "JWT",
+    description = "Authorization 헤더에 토큰을 넣습니다. /auth/refresh 는 refresh 토큰을 사용합니다."
 )
 
 @Configuration
@@ -21,16 +31,18 @@ public class SwaggerConfig {
   @Bean
   public GroupedOpenApi authApi() {
     return GroupedOpenApi.builder()
-        .group("🔐 인증/인가")
-        .pathsToMatch("/auth/**")
+        .group("auth")
+        .displayName("🔐 인증/인가")
+        .pathsToMatch("/api/v1/auth/**")
         .build();
   }
 
   @Bean
   public GroupedOpenApi userApi() {
     return GroupedOpenApi.builder()
-        .group("👤 마이페이지")
-        .pathsToMatch("/users/**")
+        .group("users")
+        .displayName("👤 마이페이지")
+        .pathsToMatch("/api/v1/users/**")
         .build();
   }
 
