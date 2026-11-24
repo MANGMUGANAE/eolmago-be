@@ -31,4 +31,8 @@ public class CustomUserDetails implements UserDetails {
   public String getUsername() { //이메일 사용하지 않음
     return "";
   }
+
+  public String getUuid() {
+    return user.getUuid();
+  }
 }

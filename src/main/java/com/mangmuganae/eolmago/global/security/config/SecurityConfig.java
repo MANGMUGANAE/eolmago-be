@@ -1,10 +1,8 @@
 package com.mangmuganae.eolmago.global.security.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
 import com.mangmuganae.eolmago.global.exception.ErrorCode;
 import com.mangmuganae.eolmago.global.oauth2.CustomOAuth2AuthorizationRequestResolver;
-import com.mangmuganae.eolmago.global.oauth2.MultiStateAuthorizationRequestRepository;
 import com.mangmuganae.eolmago.global.oauth2.OAuth2LoginFailureHandler;
 import com.mangmuganae.eolmago.global.oauth2.OAuth2LoginSuccessHandler;
 import com.mangmuganae.eolmago.global.oauth2.OAuth2UserService;
@@ -47,11 +45,11 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
-                "/users/**",
+                "/api/v1/users/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html",
                 "/v3/api-docs/**",
-                "/auth/**",
+                "/api/v1/auth/**",
                 "/oauth2/**",
                 "/login/**"
             ).permitAll()
