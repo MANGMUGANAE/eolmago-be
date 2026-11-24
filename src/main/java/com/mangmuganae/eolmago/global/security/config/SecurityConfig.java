@@ -1,10 +1,8 @@
 package com.mangmuganae.eolmago.global.security.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
 import com.mangmuganae.eolmago.global.exception.ErrorCode;
 import com.mangmuganae.eolmago.global.oauth2.CustomOAuth2AuthorizationRequestResolver;
-import com.mangmuganae.eolmago.global.oauth2.MultiStateAuthorizationRequestRepository;
 import com.mangmuganae.eolmago.global.oauth2.OAuth2LoginFailureHandler;
 import com.mangmuganae.eolmago.global.oauth2.OAuth2LoginSuccessHandler;
 import com.mangmuganae.eolmago.global.oauth2.OAuth2UserService;
@@ -31,8 +29,8 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http, tools.jackson.databind.ObjectMapper objectMapper,
       CustomOAuth2AuthorizationRequestResolver customOAuth2AuthorizationRequestResolver,
       OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
-      OAuth2LoginFailureHandler oAuth2LoginFailureHandler,
-      MultiStateAuthorizationRequestRepository multiStateAuthorizationRequestRepository) throws Exception {
+      OAuth2LoginFailureHandler oAuth2LoginFailureHandler)
+      throws Exception {
 
     // 인증 실패 시 반환할 JSON 응답
     String invalidAuthenticationResponse = objectMapper
@@ -47,11 +45,11 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
-                "/users/**",
+                "/api/v1/users/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html",
                 "/v3/api-docs/**",
-                "/auth/**",
+                "/api/v1/auth/**",
                 "/oauth2/**",
                 "/login/**"
             ).permitAll()
@@ -77,7 +75,6 @@ public class SecurityConfig {
         .oauth2Login(oauth2 -> oauth2
             .authorizationEndpoint(authorization -> authorization
                 .baseUri("/oauth2/authorization")
-                .authorizationRequestRepository(multiStateAuthorizationRequestRepository)
                 .authorizationRequestResolver(customOAuth2AuthorizationRequestResolver)
             )
             .redirectionEndpoint(redirection -> redirection
