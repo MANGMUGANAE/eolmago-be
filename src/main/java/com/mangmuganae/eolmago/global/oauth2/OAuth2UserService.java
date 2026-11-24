@@ -1,6 +1,8 @@
 package com.mangmuganae.eolmago.global.oauth2;
 
+import com.mangmuganae.eolmago.domain.auth.entity.Auth;
 import com.mangmuganae.eolmago.domain.auth.repository.AuthRepository;
+import com.mangmuganae.eolmago.domain.user.entity.User;
 import com.mangmuganae.eolmago.domain.user.repository.UserRepository;
 import com.mangmuganae.eolmago.global.security.jwt.JwtTokenProvider;
 import java.util.Collections;
@@ -12,6 +14,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +38,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        String provider = userRequest.getClientRegistration().getRegistrationId();
+        String socialProvider = userRequest.getClientRegistration().getRegistrationId();
 
         Map<String, Object> attributes = oAuth2User.getAttributes();
         String email, name, providerId;
@@ -44,7 +47,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
 
 
-      if ("google".equals(provider)) {
+      if ("google".equals(socialProvider)) {
         providerId = (String) attributes.get("sub");
 
         email = (String) attributes.get("email");
@@ -54,30 +57,18 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         log.info("Google Email: " + email);
         log.info("Google Name: " + name);
 
-      } else if ("naver".equals(provider)) {
-        Map<String, Object> response = (Map<String, Object>) attributes.get("response");
-
-        providerId = (String) response.get("id");
-        email = (String) response.get("email");
-        name = (String) response.get("nickname");
-
-        log.info("Naver Provider ID: " + providerId);
-        log.info("Naver Email: " + email);
-        log.info("Naver Name: " + name);
-      } else if ("kakao".equals(provider)) {
+      }  else if ("kakao".equals(socialProvider)) {
         providerId = String.valueOf(attributes.get("id"));
 
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
-
-        name = (String) profile.get("nickname");
-        email = name + "@" + "kakao.com";
+//        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+//        Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+//
+//        name = (String) profile.get("nickname");
+//        email = name + "@" + "kakao.com";
 
         log.info("Kakao Provider ID: " + providerId);
-        log.info("Kakao Email: " + email);
-        log.info("Kakao Name: " + name);
       } else {
-        throw new OAuth2AuthenticationException("지원되지 않는 소셜 서비스 입니다. : " + provider);
+        throw new OAuth2AuthenticationException("지원되지 않는 소셜 서비스 입니다. : " + socialProvider);
       }
 
         // 회원가입 또는 로그인 처리
@@ -86,32 +77,31 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
       if (user == null) {
         user = User.createMember(
-            name,
-            email,
-            provider,
-            providerId
+            providerId,
+            socialProvider,
+            null
         );
         isNewUser = true;
       }
 
       if(isNewUser) {
-        accessToken = jwtTokenProvider.createAccessToken(user.getUuid(), user.getRole());
-        refreshToken = jwtTokenProvider.createRefreshToken(user.getUuid(), user.getRole());
+        accessToken = jwtTokenProvider.createAccessToken(user.getUuid(), user.getRole().toString());
+        refreshToken = jwtTokenProvider.createRefreshToken(user.getUuid(), user.getRole().toString());
 
         authRepository.save(
-            Auth.createAuth(user.getUuid(), refreshToken)
+            Auth.of(user.getUuid(), refreshToken)
         );
         userRepository.save(user);
       } else {
         User cpyUser = user;
 
-        accessToken = jwtTokenProvider.createAccessToken(user.getUuid(), user.getRole());
+        accessToken = jwtTokenProvider.createAccessToken(user.getUuid(), user.getRole().toString());
         log.info("uuid : " + user.getUuid());
         Auth auth = authRepository.findByUuid(user.getUuid())
             .orElseGet(() -> {
-              Auth newAuth = Auth.createAuth(
+              Auth newAuth = Auth.of(
                   cpyUser.getUuid(),
-                  jwtTokenProvider.createRefreshToken(cpyUser.getUuid(), cpyUser.getRole())
+                  jwtTokenProvider.createRefreshToken(cpyUser.getUuid(), cpyUser.getRole().toString())
               );
               return authRepository.save(newAuth);
             });
@@ -119,9 +109,9 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         refreshToken = auth.getRefreshToken();
 
         if(!jwtTokenProvider.isValidToken(refreshToken)) {
-          refreshToken = jwtTokenProvider.createRefreshToken(cpyUser.getUuid(), cpyUser.getRole());
+          refreshToken = jwtTokenProvider.createRefreshToken(cpyUser.getUuid(), cpyUser.getRole().toString());
           auth.updateRefreshToken(refreshToken);
-          authRepository.update(auth);
+          authRepository.save(auth);
         }
       }
 
@@ -129,12 +119,11 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
         customAttributes.put("accessToken", accessToken);
         customAttributes.put("refreshToken", refreshToken);
-        customAttributes.put("email", email);
 
         return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole())),
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().toString())),
                 customAttributes,
-                "email"
+                "id"
         );
     }
 }

@@ -26,10 +26,9 @@ public class User extends BaseEntity {
   private Long id;
 
   private String uuid;
-  private String socialId;
+  private String providerId;
 
-  @Enumerated(EnumType.STRING)
-  private SocialProvider socialProvider;
+  private String socialProvider;
 
   @Enumerated(EnumType.STRING)
   private JjandolRank jjandolRank;
@@ -47,13 +46,13 @@ public class User extends BaseEntity {
   private Integer userReliabillityScore; //사용자 신뢰도
 
   @Builder
-  private User(Long id, String uuid, String socialId, SocialProvider socialProvider,
+  private User(Long id, String uuid, String providerId, String socialProvider,
       JjandolRank jjandolRank, Integer jjandolCoin, String nickname, Integer reportedCount,
       Integer likeRate, Role role, Integer userReliabillityScore) {
 
     this.id = id;
     this.uuid = uuid;
-    this.socialId = socialId;
+    this.providerId = providerId;
     this.socialProvider = socialProvider;
     this.jjandolRank = jjandolRank;
     this.jjandolCoin = jjandolCoin;
@@ -64,36 +63,36 @@ public class User extends BaseEntity {
     this.userReliabillityScore = userReliabillityScore;
   }
 
-  public static User createMember(String socialId, SocialProvider socialProvider,
-      String nickname, Integer reportedCount, Integer likeRate) {
+  public static User createMember(String providerId, String socialProvider,
+      String nickname) {
     return User.builder()
         .id(null)
         .uuid(UUID.randomUUID().toString())
-        .socialId(socialId)
+        .providerId(providerId)
         .socialProvider(socialProvider)
         .jjandolRank(JjandolRank.BEGINNER)
         .jjandolCoin(0)
         .nickname(nickname)
-        .reportedCount(reportedCount)
-        .likeRate(likeRate)
+        .reportedCount(0)
+        .likeRate(0)
         .role(Role.MEMBER)
         .userReliabillityScore(0)
         .build();
   }
 
-  public static User createAdmin(String socialId, SocialProvider socialProvider,
-      String nickname, Integer reportedCount, Integer likeRate) {
+  public static User createAdmin(String providerId, String socialProvider,
+      String nickname) {
 
     return User.builder()
         .id(null)
         .uuid(UUID.randomUUID().toString())
-        .socialId(socialId)
+        .providerId(providerId)
         .socialProvider(socialProvider)
         .jjandolRank(JjandolRank.BEGINNER)
         .jjandolCoin(0)
         .nickname(nickname)
-        .reportedCount(reportedCount)
-        .likeRate(likeRate)
+        .reportedCount(0)
+        .likeRate(0)
         .role(Role.ADMIN)
         .userReliabillityScore(0)
         .build();

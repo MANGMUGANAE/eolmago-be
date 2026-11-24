@@ -3,6 +3,9 @@ package com.mangmuganae.eolmago.global.security.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
 import com.mangmuganae.eolmago.global.exception.ErrorCode;
+import com.mangmuganae.eolmago.global.oauth2.CustomOAuth2AuthorizationRequestResolver;
+import com.mangmuganae.eolmago.global.oauth2.OAuth2LoginSuccessHandler;
+import com.mangmuganae.eolmago.global.oauth2.OAuth2UserService;
 import com.mangmuganae.eolmago.global.security.jwt.JwtTokenFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -20,10 +23,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
   private final JwtTokenFilter jwtTokenFilter;
-  private final ObjectMapper objectMapper;
+  private final OAuth2UserService oAuth2UserService;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http, tools.jackson.databind.ObjectMapper objectMapper,
+      CustomOAuth2AuthorizationRequestResolver customOAuth2AuthorizationRequestResolver,
+      OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) throws Exception {
 
     // 인증 실패 시 반환할 JSON 응답
     String invalidAuthenticationResponse = objectMapper
@@ -42,7 +47,9 @@ public class SecurityConfig {
                 "/swagger-ui/**",
                 "/swagger-ui.html",
                 "/v3/api-docs/**",
-                "/auth/**"
+                "/auth/**",
+                "/oauth2/**",
+                "/login/**"
             ).permitAll()
             .anyRequest().authenticated()
         )
@@ -61,6 +68,18 @@ public class SecurityConfig {
               response.getWriter().write(invalidAuthorizationResponse);
             }))
         .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
+
+    // oauth2 설정
+        .oauth2Login(oauth2 -> oauth2
+            .authorizationEndpoint(authorization -> authorization
+                .baseUri("/oauth2/authorization")
+                .authorizationRequestResolver(customOAuth2AuthorizationRequestResolver)
+            )
+            .redirectionEndpoint(redirection -> redirection
+                .baseUri("/login/oauth2/code/*"))
+            .userInfoEndpoint(userInfo -> userInfo
+                .userService(oAuth2UserService))
+            .successHandler(oAuth2LoginSuccessHandler))
     ;
     return http.build();
   }

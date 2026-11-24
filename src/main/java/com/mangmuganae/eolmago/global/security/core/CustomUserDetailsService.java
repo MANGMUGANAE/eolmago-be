@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 	 */
 	@Override
 	public UserDetails loadUserByUsername(String socialId) throws CustomUserNotFoundException {
-		User user = userRepository.findBySocialId(socialId).orElseThrow(
+		User user = userRepository.findByProviderId(socialId).orElseThrow(
 			() -> new CustomUserNotFoundException(ErrorCode.USER_NOT_FOUND));
 
 		return new CustomUserDetails(user);
@@ -38,7 +38,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 	 * @throws CustomUserNotFoundException 사용자를 찾을 수 없는 경우
 	 */
 	public UserDetails loadUserById(String socialId) throws CustomUserNotFoundException {
-		User user = userRepository.findBySocialId(socialId).orElseThrow(
+		User user = userRepository.findByProviderId(socialId).orElseThrow(
 				() -> new CustomUserNotFoundException(ErrorCode.USER_NOT_FOUND));
 		return new CustomUserDetails(user);
 	}

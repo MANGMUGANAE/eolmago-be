@@ -9,8 +9,10 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Component
@@ -36,10 +38,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         //TODO: 리다이렉트 URI 검증 로직 추가해야함
 
-//        if(!StringUtils.hasText(redirectUri)){
-//            redirectUri = "https://api.koning.kr/login/social-info";
-//            //redirectUri = "http://localhost:8080/login/social-info";
-//        }
+        if(!StringUtils.hasText(redirectUri)){
+            redirectUri = "https://google.com";
+            //redirectUri = "http://localhost:8080/login/social-info";
+        }
 
         response.sendRedirect(redirectUri + "?accessToken=" + accessToken + "&refreshToken=" + refreshToken);
     }
