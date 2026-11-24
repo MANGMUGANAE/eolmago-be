@@ -1,13 +1,17 @@
 package com.mangmuganae.eolmago.domain.user.entity;
 
 
+import com.mangmuganae.eolmago.domain.imagefile.entity.ImageFile;
 import com.mangmuganae.eolmago.global.common.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -45,10 +49,16 @@ public class User extends BaseEntity {
 
   private Integer userReliabillityScore; //사용자 신뢰도
 
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "image_file_id", unique = true)
+  private ImageFile file;
+
+
   @Builder
   private User(Long id, String uuid, String providerId, String socialProvider,
       JjandolRank jjandolRank, Integer jjandolCoin, String nickname, Integer reportedCount,
-      Integer likeRate, Role role, Integer userReliabillityScore) {
+      Integer likeRate, Role role, Integer userReliabillityScore,
+      ImageFile file) {
 
     this.id = id;
     this.uuid = uuid;
@@ -61,6 +71,7 @@ public class User extends BaseEntity {
     this.likeRate = likeRate;
     this.role = role;
     this.userReliabillityScore = userReliabillityScore;
+    this.file = file;
   }
 
   public static User createMember(String providerId, String socialProvider,
@@ -77,6 +88,7 @@ public class User extends BaseEntity {
         .likeRate(0)
         .role(Role.MEMBER)
         .userReliabillityScore(0)
+        .file(null)
         .build();
   }
 
@@ -95,7 +107,15 @@ public class User extends BaseEntity {
         .likeRate(0)
         .role(Role.ADMIN)
         .userReliabillityScore(0)
+        .file(null)
         .build();
+  }
+
+  public void updateProfileImage(ImageFile imageFile) {
+    this.file = imageFile;
+  }
+  public void updateProfileNickname(String nickname) {
+    this.nickname = nickname;
   }
 
 }
