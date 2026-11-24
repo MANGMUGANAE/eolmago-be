@@ -35,6 +35,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
       boolean isNewUser = false;
       String accessToken;
       String refreshToken;
+      String nameAttributeKey;
 
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
@@ -48,6 +49,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
 
       if ("google".equals(socialProvider)) {
+        nameAttributeKey = "sub";
         providerId = (String) attributes.get("sub");
 
         email = (String) attributes.get("email");
@@ -58,6 +60,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         log.info("Google Name: " + name);
 
       }  else if ("kakao".equals(socialProvider)) {
+        nameAttributeKey = "id";
         providerId = String.valueOf(attributes.get("id"));
 
 //        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
@@ -123,7 +126,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().toString())),
                 customAttributes,
-                "id"
+            nameAttributeKey
         );
     }
 }
