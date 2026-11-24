@@ -32,6 +32,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String accessToken = (String) attributes.get("accessToken");
         String refreshToken = (String) attributes.get("refreshToken");
+        Boolean isNewUser = (Boolean) attributes.get("isNewUser");
 
         String redirectUri = (String) request.getSession().getAttribute("redirectUri");
         request.getSession().removeAttribute("redirectUri");
@@ -43,6 +44,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             //redirectUri = "http://localhost:8080/login/social-info";
         }
 
-        response.sendRedirect(redirectUri + "?accessToken=" + accessToken + "&refreshToken=" + refreshToken);
+        response.sendRedirect(redirectUri + "?accessToken=" + accessToken + "&refreshToken=" + refreshToken + "&isNewUser=" + isNewUser);
     }
 }
