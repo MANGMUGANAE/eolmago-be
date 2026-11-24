@@ -118,10 +118,13 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         }
       }
 
+      isNewUser = user.getNickname() == null;
+
         // JWT 액세스 & 리프레시 토큰 발급
 
         customAttributes.put("accessToken", accessToken);
         customAttributes.put("refreshToken", refreshToken);
+        customAttributes.put("isNewUser", isNewUser);
 
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().toString())),

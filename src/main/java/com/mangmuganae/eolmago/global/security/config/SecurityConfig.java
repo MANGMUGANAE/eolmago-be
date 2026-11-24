@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
 import com.mangmuganae.eolmago.global.exception.ErrorCode;
 import com.mangmuganae.eolmago.global.oauth2.CustomOAuth2AuthorizationRequestResolver;
+import com.mangmuganae.eolmago.global.oauth2.MultiStateAuthorizationRequestRepository;
+import com.mangmuganae.eolmago.global.oauth2.OAuth2LoginFailureHandler;
 import com.mangmuganae.eolmago.global.oauth2.OAuth2LoginSuccessHandler;
 import com.mangmuganae.eolmago.global.oauth2.OAuth2UserService;
 import com.mangmuganae.eolmago.global.security.jwt.JwtTokenFilter;
@@ -28,7 +30,9 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, tools.jackson.databind.ObjectMapper objectMapper,
       CustomOAuth2AuthorizationRequestResolver customOAuth2AuthorizationRequestResolver,
-      OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) throws Exception {
+      OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
+      OAuth2LoginFailureHandler oAuth2LoginFailureHandler,
+      MultiStateAuthorizationRequestRepository multiStateAuthorizationRequestRepository) throws Exception {
 
     // 인증 실패 시 반환할 JSON 응답
     String invalidAuthenticationResponse = objectMapper
@@ -73,13 +77,15 @@ public class SecurityConfig {
         .oauth2Login(oauth2 -> oauth2
             .authorizationEndpoint(authorization -> authorization
                 .baseUri("/oauth2/authorization")
+                .authorizationRequestRepository(multiStateAuthorizationRequestRepository)
                 .authorizationRequestResolver(customOAuth2AuthorizationRequestResolver)
             )
             .redirectionEndpoint(redirection -> redirection
                 .baseUri("/login/oauth2/code/*"))
             .userInfoEndpoint(userInfo -> userInfo
                 .userService(oAuth2UserService))
-            .successHandler(oAuth2LoginSuccessHandler))
+            .successHandler(oAuth2LoginSuccessHandler)
+            .failureHandler(oAuth2LoginFailureHandler))
     ;
     return http.build();
   }
