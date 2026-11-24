@@ -22,14 +22,14 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: profile, email
-            redirect-uri: ${GOOGLE_DEV_REDIRECT_URI}
+            redirect-uri: ${GOOGLE_PROD_REDIRECT_URI}
             client-name: google
 
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
             client-secret: ${KAKAO_CLIENT_SECRET}
-            scope: profile_nickname
-            redirect-uri: ${KAKAO_DEV_REDIRECT_URI}
+#            scope: profile_nickname
+            redirect-uri: ${KAKAO_PROD_REDIRECT_URI}
             client-name: kakao
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
