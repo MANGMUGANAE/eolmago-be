@@ -31,8 +31,8 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http, tools.jackson.databind.ObjectMapper objectMapper,
       CustomOAuth2AuthorizationRequestResolver customOAuth2AuthorizationRequestResolver,
       OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
-      OAuth2LoginFailureHandler oAuth2LoginFailureHandler,
-      MultiStateAuthorizationRequestRepository multiStateAuthorizationRequestRepository) throws Exception {
+      OAuth2LoginFailureHandler oAuth2LoginFailureHandler)
+      throws Exception {
 
     // 인증 실패 시 반환할 JSON 응답
     String invalidAuthenticationResponse = objectMapper
@@ -77,7 +77,6 @@ public class SecurityConfig {
         .oauth2Login(oauth2 -> oauth2
             .authorizationEndpoint(authorization -> authorization
                 .baseUri("/oauth2/authorization")
-                .authorizationRequestRepository(multiStateAuthorizationRequestRepository)
                 .authorizationRequestResolver(customOAuth2AuthorizationRequestResolver)
             )
             .redirectionEndpoint(redirection -> redirection
