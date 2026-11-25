@@ -5,6 +5,11 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+
 lambda:
   ad-classifier:
     url: ${AWS_LAMDA_URL}

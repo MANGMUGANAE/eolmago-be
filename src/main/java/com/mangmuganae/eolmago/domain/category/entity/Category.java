@@ -32,7 +32,7 @@ public class Category {
 
   public CategoryDto toDto() {
     return CategoryDto.builder()
-        .id(this.id)
+        .categoryId(this.id)
         .categoryName(this.categoryName)
         .build();
   }

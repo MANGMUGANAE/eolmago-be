@@ -24,6 +24,7 @@ public enum ErrorCode {
     UNSUPPORTED_FILE_FORMAT(400, "UNSUPPORTED_FILE_FORMAT", "지원하지 않는 파일 형식입니다."),
     IMAGE_FILE_ONLY(400, "IMAGE_FILE_ONLY", "이미지 파일만 업로드 가능합니다."),
     INVALID_FILE_EXTENSION(400, "INVALID_FILE_EXTENSION", "허용되지 않는 파일 확장자입니다."),
+    IMAGE_FILE_COUNT_EXCEEDED(400, "IMAGE_FILE_COUNT_EXCEEDED", "이미지는 최대 10개까지 업로드 가능합니다."),
 
     // 400 Bad Request 사용자 아이디 관련 에러코드
     USER_ID_EMPTY(400, "USER_ID_EMPTY", "아이디는 비어있을 수 없습니다."),
@@ -88,6 +89,7 @@ public enum ErrorCode {
     SEARCH_LOG_NOT_FOUND(404, "SEARCH_LOG_NOT_FOUND", "최근 검색어가 존재하지 않습니다."),
     SCHEDULE_NOT_FOUND(404, "SCHEDULE_NOT_FOUND", "해당 스케쥴을 찾을 수 없습니다."),
     CATEGORY_NOT_FOUND(404, "CATEGORY_NOT_FOUND", "해당 카테고리를 찾을 수 없습니다."),
+    STORE_NOT_FOUND(404, "STORE_NOT_FOUND", "해당 판매처를 찾을 수 없습니다."),
     COVER_LETTER_NOT_FOUND(404, "COVER_LETTER_NOT_FOUND", "자기소개서를 찾을 수 없습니다."),
     TOKEN_NOT_FOUND(404, "TOKEN_NOT_FOUND", "토큰이 존재하지 않습니다."),
     INSIGHT_NOT_FOUND(404, "INSIGHT_NOT_FOUND", "해당 인사이트를 찾을 수 없습니다."),

@@ -6,18 +6,18 @@ import lombok.Getter;
 @Getter
 public class CategoryDto {
 
-  private Long id;
+  private Long categoryId;
   private String categoryName;
 
   @Builder
-  private CategoryDto(Long id, String categoryName) {
-    this.id = id;
+  private CategoryDto(Long categoryId, String categoryName) {
+    this.categoryId = categoryId;
     this.categoryName = categoryName;
   }
 
   public static CategoryDto of(String categoryName) {
     return CategoryDto.builder()
-        .id(null)
+        .categoryId(null)
         .categoryName(categoryName)
         .build();
   }

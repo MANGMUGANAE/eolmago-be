@@ -47,7 +47,7 @@ public class User extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private Role role;
 
-  private Integer userReliabillityScore; //사용자 신뢰도
+  private Double userReliabillityScore; //사용자 신뢰도
 
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "image_file_id", unique = true)
@@ -57,7 +57,7 @@ public class User extends BaseEntity {
   @Builder
   private User(Long id, String uuid, String providerId, String socialProvider,
       JjandolRank jjandolRank, Integer jjandolCoin, String nickname, Integer reportedCount,
-      Integer likeRate, Role role, Integer userReliabillityScore,
+      Integer likeRate, Role role, Double userReliabillityScore,
       ImageFile file) {
 
     this.id = id;
@@ -87,7 +87,7 @@ public class User extends BaseEntity {
         .reportedCount(0)
         .likeRate(0)
         .role(Role.MEMBER)
-        .userReliabillityScore(0)
+        .userReliabillityScore(0.0)
         .file(null)
         .build();
   }
@@ -106,7 +106,7 @@ public class User extends BaseEntity {
         .reportedCount(0)
         .likeRate(0)
         .role(Role.ADMIN)
-        .userReliabillityScore(0)
+        .userReliabillityScore(0.0)
         .file(null)
         .build();
   }

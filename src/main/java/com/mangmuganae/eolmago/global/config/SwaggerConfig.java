@@ -55,6 +55,24 @@ public class SwaggerConfig {
         .build();
   }
 
+  @Bean
+  public GroupedOpenApi dealPostApi() {
+    return GroupedOpenApi.builder()
+        .group("deal-posts")
+        .displayName("🔥 핫딜")
+        .pathsToMatch("/api/v1/deal-posts/**")
+        .build();
+  }
+
+  @Bean
+  public GroupedOpenApi storeApi() {
+    return GroupedOpenApi.builder()
+        .group("stores")
+        .displayName("🏬 판매처")
+        .pathsToMatch("/api/v1/stores/**")
+        .build();
+  }
+
 
 
 

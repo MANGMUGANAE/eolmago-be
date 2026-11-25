@@ -1,5 +1,6 @@
 package com.mangmuganae.eolmago.domain.store.entity;
 
+import com.mangmuganae.eolmago.domain.store.dto.StoreDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,18 +21,25 @@ public class Store {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  private String store;
+  private String storeName;
 
   @Builder
-  private Store(Long id, String store) {
+  private Store(Long id, String storeName) {
     this.id = id;
-    this.store = store;
+    this.storeName = storeName;
   }
 
-  public static Store of(String store) {
+  public StoreDto toDto() {
+    return StoreDto.builder()
+        .storeId(this.id)
+        .storeName(this.storeName)
+        .build();
+  }
+
+  public static Store of(String storeName) {
     return Store.builder()
         .id(null)
-        .store(store)
+        .storeName(storeName)
         .build();
   }
 
