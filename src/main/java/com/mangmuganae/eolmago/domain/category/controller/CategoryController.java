@@ -20,5 +20,7 @@ public class CategoryController {
 
     CategoryResponseDto categoryResponseDto = categoryService.findAll();
 
+    return ResponseDTO.of(categoryResponseDto, "카테고리 조회에 성공하였습니다.");
+
   }
 }
