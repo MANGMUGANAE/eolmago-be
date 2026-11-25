@@ -1,6 +1,7 @@
 package com.mangmuganae.eolmago.domain.category.entity;
 
 
+import com.mangmuganae.eolmago.domain.category.dto.CategoryDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,6 +28,13 @@ public class Category {
   private Category(Long id, String categoryName) {
     this.id = id;
     this.categoryName = categoryName;
+  }
+
+  public CategoryDto toDto() {
+    return CategoryDto.builder()
+        .id(this.id)
+        .categoryName(this.categoryName)
+        .build();
   }
 
   public static Category of(String categoryName) {
