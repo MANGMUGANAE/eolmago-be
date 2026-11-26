@@ -1,6 +1,7 @@
 package com.mangmuganae.eolmago.domain.user.entity;
 
 
+import com.mangmuganae.eolmago.domain.comment.entity.Comment;
 import com.mangmuganae.eolmago.domain.imagefile.entity.ImageFile;
 import com.mangmuganae.eolmago.global.common.entity.BaseEntity;
 import jakarta.persistence.Entity;
@@ -11,8 +12,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -67,6 +71,9 @@ public class User extends BaseEntity {
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "image_file_id", unique = true)
   private ImageFile file;
+
+  @OneToMany(mappedBy = "user")
+  private List<Comment> comments = new ArrayList<>();
 
 
   @Builder

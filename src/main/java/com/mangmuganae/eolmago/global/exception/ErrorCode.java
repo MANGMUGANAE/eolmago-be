@@ -32,6 +32,9 @@ public enum ErrorCode {
     INVALID_FILE_EXTENSION(400, "INVALID_FILE_EXTENSION", "허용되지 않는 파일 확장자입니다."),
     IMAGE_FILE_COUNT_EXCEEDED(400, "IMAGE_FILE_COUNT_EXCEEDED", "이미지는 최대 10개까지 업로드 가능합니다."),
 
+    // 400 Bad Request 닉네임 관련 에러코드
+    NICKNAME_REQUIRED(400, "NICKNAME_REQUIRED", "닉네임을 입력해주세요."),
+
     // 400 Bad Request 사용자 아이디 관련 에러코드
     USER_ID_EMPTY(400, "USER_ID_EMPTY", "아이디는 비어있을 수 없습니다."),
     USER_ID_DUPLICATE(400, "USER_ID_DUPLICATE", "이미 사용중인 아이디입니다."),

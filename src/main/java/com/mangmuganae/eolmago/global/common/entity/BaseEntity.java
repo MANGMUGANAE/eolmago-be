@@ -18,4 +18,6 @@ public class BaseEntity {
 
   @LastModifiedBy
   private LocalDateTime updatedAt;
+
+  private String delete_yn;
 }

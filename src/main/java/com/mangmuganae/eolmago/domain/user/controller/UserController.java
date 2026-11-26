@@ -22,23 +22,16 @@ public class UserController implements UserControllerSpecification {
 
   private final UserService userService;
 
+  @Override
   @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseDTO<?> signup(
       @RequestPart("request") SignupRequest signupRequest,
-      @RequestPart("file") MultipartFile file,
+      @RequestPart(value = "file", required = false) MultipartFile file,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
 
     String uuid = userDetails.getUuid();
 
     userService.signup(signupRequest, file, uuid);
     return ResponseDTO.of("회원가입에 성공하였습니다.");
-  }
-
-  @Override
-  @GetMapping("/health")
-  public ResponseDTO<String> healthCheck() {
-
-    return ResponseDTO.of("OK");
-
   }
 }
