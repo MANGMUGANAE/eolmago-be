@@ -142,6 +142,10 @@ public class DealPost extends BaseEntity {
     activateIfAllVerified();
   }
 
+  public boolean isVerification() {
+    return this.linkVerified && this.reliabilityVerified && this.advertisementVerified;
+  }
+
   public boolean isOwnedBy(User user) {
     return this.user.getId().equals(user.getId());
   }

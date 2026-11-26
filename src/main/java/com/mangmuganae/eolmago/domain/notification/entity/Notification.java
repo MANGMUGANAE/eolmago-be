@@ -45,21 +45,29 @@ public class Notification extends BaseEntity {
 
   @Builder
   private Notification(Long id, String content,
-      NotificationType notificationType, Boolean readYn) {
+      NotificationType notificationType, Boolean readYn,
+      User user, DealPost dealPost, Comment comment) {
 
     this.id = id;
     this.content = content;
     this.notificationType = notificationType;
     this.readYn = readYn;
+    this.user = user;
+    this.dealPost = dealPost;
+    this.comment =  comment;
   }
 
-  public static Notification of(String content, NotificationType notificationType) {
+  public static Notification of(String content, NotificationType notificationType,
+      User user, DealPost dealPost, Comment comment) {
 
     return Notification.builder()
         .id(null)
         .content(content)
         .notificationType(notificationType)
         .readYn(false)
+        .user(user)
+        .dealPost(dealPost)
+        .comment(comment)
         .build();
   }
 

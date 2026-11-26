@@ -1,7 +1,6 @@
 package com.mangmuganae.eolmago.domain.comment.controller;
 
 import com.mangmuganae.eolmago.domain.notification.docs.NotificationControllerSpecification;
-import com.mangmuganae.eolmago.domain.notification.docs.NotificationControllerSpecification;
 import com.mangmuganae.eolmago.domain.comment.dto.NotificationDto;
 import com.mangmuganae.eolmago.domain.comment.service.NotificationService;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;

@@ -1,5 +1,7 @@
 package com.mangmuganae.eolmago.domain.dealpost.service;
 
+import com.mangmuganae.eolmago.domain.alert.entity.Alert;
+import com.mangmuganae.eolmago.domain.alert.repository.AlertRepository;
 import com.mangmuganae.eolmago.domain.category.entity.Category;
 import com.mangmuganae.eolmago.domain.category.exception.CategoryNotFoundException;
 import com.mangmuganae.eolmago.domain.category.repository.CategoryRepository;
@@ -19,6 +21,11 @@ import com.mangmuganae.eolmago.domain.dealpost.exception.ImageFileCountExceededE
 import com.mangmuganae.eolmago.domain.dealpost.repository.DealPostRepository;
 import com.mangmuganae.eolmago.domain.imagefile.entity.ImageFile;
 import com.mangmuganae.eolmago.domain.imagefile.repository.ImageFileRepository;
+import com.mangmuganae.eolmago.domain.notification.config.NotificationWaitingManage;
+import com.mangmuganae.eolmago.domain.notification.dto.NotificationWaitingObject;
+import com.mangmuganae.eolmago.domain.notification.entity.Notification;
+import com.mangmuganae.eolmago.domain.notification.entity.NotificationType;
+import com.mangmuganae.eolmago.domain.notification.repository.NotificationRepository;
 import com.mangmuganae.eolmago.domain.store.entity.Store;
 import com.mangmuganae.eolmago.domain.store.exception.PurchaseLinkMissingException;
 import com.mangmuganae.eolmago.domain.store.exception.StoreNotFoundException;
@@ -31,6 +38,7 @@ import com.mangmuganae.eolmago.global.exception.ErrorCode;
 import com.mangmuganae.eolmago.global.security.exception.UserNotFoundException;
 import com.mangmuganae.eolmago.infra.impersonator.ImpersonatorUtil;
 import com.mangmuganae.eolmago.infra.lamda.LamdaUtil;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +47,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,6 +56,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 public class DealPostService {
+
+  private final AlertRepository alertRepository;
+  private final NotificationRepository notificationRepository;
+
 
   private static final int MAX_IMAGE_FILE_COUNT = 10;
 
@@ -81,6 +94,8 @@ public class DealPostService {
   private final FileStorage fileStorage;
   private final ImpersonatorUtil impersonatorUtil;
   private final LamdaUtil lamdaUtil;
+
+  private final NotificationWaitingManage notificationWaitingManage;
 
   /**
    * 핫딜 목록을 조건별로 조회합니다.
@@ -128,6 +143,7 @@ public class DealPostService {
     Category category = categoryRepository.findById(dealPostDto.getCategoryId()).orElseThrow(
         () -> new CategoryNotFoundException(ErrorCode.CATEGORY_NOT_FOUND)
     );
+    String keyword = dealPostDto.getProductName();
 
     Store store = findStore(dealPostDto.getStoreId());
 
@@ -147,6 +163,16 @@ public class DealPostService {
 
     saveImageFiles(files, dealPost);
 
+    // 알림 처리
+    NotificationWaitingObject notificationWaitingObject = NotificationWaitingObject.builder()
+            .category(category)
+                .keyword(keyword)
+                    .dealPost(dealPost)
+                        .user(user)
+                            .build();
+
+    sendNotification(notificationWaitingObject);
+
     return DealPostUploadResponseDto.of(dealPost.getId());
   }
 
@@ -157,6 +183,9 @@ public class DealPostService {
   public DealPostVerificationResponseDto verifyLink(Long dealPostId, String uuid) {
 
     DealPost dealPost = findOwnedDealPost(dealPostId, uuid);
+    User user = userRepository.findByUuid(uuid).orElseThrow(
+        () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND)
+    );
 
     if (dealPost.getPurchaseLink() == null || dealPost.getPurchaseLink().isBlank()) {
       throw new PurchaseLinkMissingException(ErrorCode.PURCHASE_LINK_MISSING);
@@ -319,4 +348,10 @@ public class DealPostService {
     return (productName + " " + content).trim();
   }
 
-}
+  public void sendNotification(NotificationWaitingObject notificationWaitingObject) {
+
+    this.notificationWaitingManage.add(notificationWaitingObject);
+
+  }
+
+ }
