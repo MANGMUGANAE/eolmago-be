@@ -69,7 +69,6 @@ public class DealPost extends BaseEntity {
   private Store store;
 
 
-
   @Builder
   private DealPost(Long id, String purchaseLink, String productName, Integer productPrice,
       String content, Long likeCount, Long dislikeCount, Long viewCount, Integer commentCount,

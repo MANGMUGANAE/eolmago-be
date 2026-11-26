@@ -1,7 +1,10 @@
 package com.mangmuganae.eolmago.domain.notification.entity;
 
+import com.mangmuganae.eolmago.domain.comment.dto.NotificationDto;
+import com.mangmuganae.eolmago.domain.comment.entity.Comment;
 import com.mangmuganae.eolmago.domain.dealpost.entity.DealPost;
 import com.mangmuganae.eolmago.domain.user.entity.User;
+import com.mangmuganae.eolmago.global.common.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -11,12 +14,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "notification")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Notification {
+public class Notification extends BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,14 +29,7 @@ public class Notification {
   private String content;
 
   private NotificationType notificationType;
-  /*
-  COMMENT : 댓글 관련 알림임
-  ZZAN_PICK : 댓글이 짠픽으로 선정된 경우 알림임
-  KEYWORD : 키워드 알림 설정한 핫딜글 알림
-  CATEGORY : 카테고리 알림 설정한 핫딜글 알림
-   */
-
-  private Boolean read;
+  private Boolean readYn;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
@@ -41,6 +38,42 @@ public class Notification {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "deal_post_id")
   private DealPost dealPost;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "comment_id")
+  private Comment comment;
+
+  @Builder
+  private Notification(Long id, String content,
+      NotificationType notificationType, Boolean readYn) {
+
+    this.id = id;
+    this.content = content;
+    this.notificationType = notificationType;
+    this.readYn = readYn;
+  }
+
+  public static Notification of(String content, NotificationType notificationType) {
+
+    return Notification.builder()
+        .id(null)
+        .content(content)
+        .notificationType(notificationType)
+        .readYn(false)
+        .build();
+  }
+
+  public NotificationDto toDto() {
+    return NotificationDto.builder()
+        .notificationId(this.id)
+        .content(this.content)
+        .notificationType(this.notificationType)
+        .readYn(this.readYn)
+        .dealPostId(this.dealPost.getId())
+        .commentId(this.comment.getId())
+        .pushedAt(this.getCreatedAt())
+        .build();
+  }
 
 
 
