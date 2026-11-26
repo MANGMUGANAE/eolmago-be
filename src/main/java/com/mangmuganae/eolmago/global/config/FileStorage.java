@@ -5,10 +5,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
+import com.mangmuganae.eolmago.global.exception.ErrorCode;
+import com.mangmuganae.eolmago.global.exception.FileUploadFailedException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Component
 public class FileStorage {
 
@@ -29,7 +33,8 @@ public class FileStorage {
       Files.createDirectories(target.getParent());
       file.transferTo(target.toFile());
     } catch (IOException e) {
-      throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
+      log.error("파일 저장 실패: {}", file.getOriginalFilename(), e);
+      throw new FileUploadFailedException(ErrorCode.FILE_UPLOAD_FAILED);
     }
 
     return "/files/" + savedName;

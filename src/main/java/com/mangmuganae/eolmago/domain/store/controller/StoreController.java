@@ -1,5 +1,6 @@
 package com.mangmuganae.eolmago.domain.store.controller;
 
+import com.mangmuganae.eolmago.domain.store.docs.StoreControllerSpecification;
 import com.mangmuganae.eolmago.domain.store.dto.StoreDto;
 import com.mangmuganae.eolmago.domain.store.dto.StoreResponseDto;
 import com.mangmuganae.eolmago.domain.store.dto.StoreSearchRequestDto;
@@ -16,10 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/stores")
-public class StoreController {
+public class StoreController implements StoreControllerSpecification {
 
   private final StoreService storeService;
 
+  @Override
   @PostMapping("/search")
   public ResponseDTO<StoreDto> searchByPurchaseLink(
       @RequestBody StoreSearchRequestDto storeSearchRequestDto) {
@@ -30,6 +32,7 @@ public class StoreController {
     return ResponseDTO.of(storeDto, "판매처 조회에 성공하였습니다.");
   }
 
+  @Override
   @GetMapping
   public ResponseDTO<StoreResponseDto> searchByStoreName(
       @RequestParam(value = "keyword", required = false) String keyword) {

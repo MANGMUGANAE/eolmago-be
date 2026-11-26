@@ -18,6 +18,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Formula;
 
 @Entity
 @Getter
@@ -36,6 +37,20 @@ public class User extends BaseEntity {
 
   @Enumerated(EnumType.STRING)
   private JjandolRank jjandolRank;
+
+  /**
+   * 짠돌 등급을 정렬 가능한 숫자로 환산한 읽기 전용 값입니다.
+   * jjandol_rank 가 문자열로 저장되어 등급 순 정렬이 불가능하므로 조회 시 DB 에서 계산합니다.
+   * 값은 JjandolRank.level 과 동일하게 유지해야 합니다.
+   */
+  @Formula("(CASE jjandol_rank "
+      + "WHEN 'STARTER' THEN 1 "
+      + "WHEN 'BEGINNER' THEN 2 "
+      + "WHEN 'INTERMEDIATE' THEN 3 "
+      + "WHEN 'EXPERT' THEN 4 "
+      + "WHEN 'MASTER' THEN 5 "
+      + "ELSE 0 END)")
+  private Integer jjandolRankLevel;
 
   private Integer jjandolCoin;
 

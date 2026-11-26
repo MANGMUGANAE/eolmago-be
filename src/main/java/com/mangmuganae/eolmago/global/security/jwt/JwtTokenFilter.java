@@ -54,11 +54,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     if(token != null) {
       try {
         jwtTokenProvider.validateToken(token);
-        JwtTokenType tokenType = jwtTokenProvider.getTypeFromToken(token);
-
-        if (tokenType.equals(JwtTokenType.REFRESH)) {
-          throw new InvalidAccessJwtException(ErrorCode.ACCESS_TOKEN_INVALID);
-        }
+        // TODO: 배포 시 주석 해제해야함
+//        JwtTokenType tokenType = jwtTokenProvider.getTypeFromToken(token);
+//
+//        if (tokenType.equals(JwtTokenType.REFRESH)) {
+//          throw new InvalidAccessJwtException(ErrorCode.ACCESS_TOKEN_INVALID);
+//        }
 
         log.info("[" + request.getRemoteAddr() + "]:"
             + "[" + method + ":" + url + "](allowed)");

@@ -20,6 +20,12 @@ public enum ErrorCode {
     INVALID_SEARCH_KEYWORD_MAXIMUM(400, "INVALID_SEARCH_KEYWORD_MAXIMUM", "검색어는 15자 이하로 입력해주세요."),
     INVALID_SEARCH_KEYWORD(400, "INVALID_SEARCH_KEYWORD", "검색어에 '대학', '대학교', '학교'는 단독으로 사용할 수 없습니다."),
 
+    // 400 Bad Request 핫딜 관련 에러코드
+    INVALID_DEAL_POST_SORT_TYPE(400, "INVALID_DEAL_POST_SORT_TYPE", "정렬 조건이 올바르지 않습니다. latest, price, grade 중 하나를 사용해주세요."),
+
+    // 400 Bad Request 판매처 관련 에러코드
+    PURCHASE_LINK_MISSING(400, "PURCHASE_LINK_MISSING", "상품 링크를 입력해주세요."),
+
     // 400 Bad Request 파일 관련 에러코드
     UNSUPPORTED_FILE_FORMAT(400, "UNSUPPORTED_FILE_FORMAT", "지원하지 않는 파일 형식입니다."),
     IMAGE_FILE_ONLY(400, "IMAGE_FILE_ONLY", "이미지 파일만 업로드 가능합니다."),
@@ -105,7 +111,9 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."),
     VECTOR_EMBEDDING_API_FAILED(500, "VECTOR_EMBEDDING_API_FAILED", "벡터 임베딩 API 호출에 실패했습니다."),
     UNKNOWN_ERROR(500, "UNKNOWN_ERROR", "예기치 못한 오류가 발생했습니다."),
-    AI_RESPONSE_PARSE_ERROR(500, "AI_RESPONSE_PARSE_ERROR", "AI 응답 파싱에 실패했습니다.");
+    AI_RESPONSE_PARSE_ERROR(500, "AI_RESPONSE_PARSE_ERROR", "AI 응답 파싱에 실패했습니다."),
+    AD_CLASSIFICATION_FAILED(500, "AD_CLASSIFICATION_FAILED", "광고글 판별에 실패했습니다. 잠시 후 다시 시도해주세요."),
+    FILE_UPLOAD_FAILED(500, "FILE_UPLOAD_FAILED", "파일 저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
 
 
     private final Integer customStatusCode;
