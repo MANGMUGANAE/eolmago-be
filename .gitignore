@@ -3,6 +3,9 @@ HELP.md
 .env
 build/
 
+src/main/resources/db/
+src/main/resources/file/
+
 lambda/model.onnx
 lambda/tokenizer.json
 lambda/tokenizer_config.json
