@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -63,7 +62,6 @@ public class NotificationWaitingManage {
     return keyword.substring(0, maxLength) + "... ";
   }
 
-  @Async
   public void sendDealNotifications(NotificationWaitingObject notificationWaitingObject) {
 
     List<Alert> alertWithoutCategory = alertRepository.findAllByCategoryIdIsNull(); //키워드
@@ -93,7 +91,7 @@ public class NotificationWaitingManage {
     //카테고리 전송
     if (!alertWithoutKeyword.isEmpty()) {
       for (Alert alert : alertWithoutKeyword) {
-        if (alert.getCategory().equals(category)) {
+        if (alert.getCategory().getId().equals(category.getId())) {
           notificationWithoutKeyword.add(
               Notification.of(summaryOf(keyword, 30) + "핫딜이 올라왔어요",
                   NotificationType.CATEGORY,
