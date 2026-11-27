@@ -1,4 +1,4 @@
-package com.mangmuganae.eolmago.domain.comment.dto;
+package com.mangmuganae.eolmago.domain.notification.dto;
 
 import com.mangmuganae.eolmago.domain.notification.entity.NotificationType;
 import java.time.LocalDateTime;

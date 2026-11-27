@@ -48,6 +48,7 @@ public class AlertController implements AlertControllerSpecification {
     return ResponseDTO.of("알림 등록에 성공하였습니다.");
   }
 
+
   @Override
   @DeleteMapping("/{alertId}")
   public ResponseDTO<?> deleteAlert(@PathVariable Long alertId,

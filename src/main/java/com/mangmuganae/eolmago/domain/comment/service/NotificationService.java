@@ -1,6 +1,6 @@
 package com.mangmuganae.eolmago.domain.comment.service;
 
-import com.mangmuganae.eolmago.domain.comment.dto.NotificationDto;
+import com.mangmuganae.eolmago.domain.notification.dto.NotificationDto;
 import com.mangmuganae.eolmago.domain.notification.entity.Notification;
 import com.mangmuganae.eolmago.domain.notification.repository.NotificationRepository;
 import java.util.List;

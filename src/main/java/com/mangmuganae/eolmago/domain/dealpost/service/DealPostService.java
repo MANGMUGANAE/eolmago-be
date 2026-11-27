@@ -5,7 +5,11 @@ import com.mangmuganae.eolmago.domain.alert.repository.AlertRepository;
 import com.mangmuganae.eolmago.domain.category.entity.Category;
 import com.mangmuganae.eolmago.domain.category.exception.CategoryNotFoundException;
 import com.mangmuganae.eolmago.domain.category.repository.CategoryRepository;
+import com.mangmuganae.eolmago.domain.comment.entity.Comment;
+import com.mangmuganae.eolmago.domain.comment.repository.CommentRepository;
 import com.mangmuganae.eolmago.domain.dealpost.constant.AffiliateLinkPattern;
+import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostCommentResponseDto;
+import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDetailResponseDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostPreivewResponseDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchRequestDto;
@@ -59,6 +63,7 @@ public class DealPostService {
 
   private final AlertRepository alertRepository;
   private final NotificationRepository notificationRepository;
+  private final CommentRepository commentRepository;
 
 
   private static final int MAX_IMAGE_FILE_COUNT = 10;
@@ -354,4 +359,17 @@ public class DealPostService {
 
   }
 
- }
+  public DealPostDetailResponseDto getDealPostDetailById(Long dealPostId) {
+
+    DealPost dealPost = dealPostRepository.findById(dealPostId).orElseThrow(
+        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
+    );
+
+    User user = dealPost.getUser();
+
+    List<Comment> comments = commentRepository.findByDealPost(dealPost);
+
+    return DealPostDetailResponseDto.createByDealPostAndUserAndComments(dealPost, user, comments);
+
+  }
+}

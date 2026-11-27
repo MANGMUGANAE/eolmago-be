@@ -1,6 +1,6 @@
 package com.mangmuganae.eolmago.domain.notification.docs;
 
-import com.mangmuganae.eolmago.domain.comment.dto.NotificationDto;
+import com.mangmuganae.eolmago.domain.notification.dto.NotificationDto;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
 import com.mangmuganae.eolmago.global.security.core.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;

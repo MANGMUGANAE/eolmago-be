@@ -2,6 +2,7 @@ package com.mangmuganae.eolmago.domain.dealpost.entity;
 
 import com.mangmuganae.eolmago.domain.category.entity.Category;
 import com.mangmuganae.eolmago.domain.comment.entity.Comment;
+import com.mangmuganae.eolmago.domain.imagefile.entity.ImageFile;
 import com.mangmuganae.eolmago.domain.notification.entity.Notification;
 import com.mangmuganae.eolmago.domain.store.entity.Store;
 import com.mangmuganae.eolmago.domain.user.entity.User;
@@ -68,6 +69,8 @@ public class DealPost extends BaseEntity {
   @JoinColumn(name = "store_id")
   private Store store;
 
+  @OneToMany(mappedBy = "dealPost")
+  private List<ImageFile> imageFiles = new ArrayList<>();
 
   @Builder
   private DealPost(Long id, String purchaseLink, String productName, Integer productPrice,

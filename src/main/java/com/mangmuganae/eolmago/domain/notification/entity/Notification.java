@@ -1,6 +1,6 @@
 package com.mangmuganae.eolmago.domain.notification.entity;
 
-import com.mangmuganae.eolmago.domain.comment.dto.NotificationDto;
+import com.mangmuganae.eolmago.domain.notification.dto.NotificationDto;
 import com.mangmuganae.eolmago.domain.comment.entity.Comment;
 import com.mangmuganae.eolmago.domain.dealpost.entity.DealPost;
 import com.mangmuganae.eolmago.domain.user.entity.User;

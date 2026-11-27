@@ -1,6 +1,7 @@
 package com.mangmuganae.eolmago.domain.dealpost.controller;
 
 import com.mangmuganae.eolmago.domain.dealpost.docs.DealPostControllerSpecification;
+import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDetailResponseDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchRequestDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchResponseDto;
@@ -28,6 +29,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class DealPostController implements DealPostControllerSpecification {
 
   private final DealPostService dealPostService;
+
+  @Override
+  @GetMapping("/{dealPostId}")
+  public ResponseDTO<DealPostDetailResponseDto> getDealPostDetailById(@PathVariable Long dealPostId) {
+
+    DealPostDetailResponseDto dealPostDetailResponseDto = dealPostService.getDealPostDetailById(dealPostId);
+    return ResponseDTO.of(dealPostDetailResponseDto, "조회에 성공하였습니다.");
+  }
 
   @Override
   @GetMapping

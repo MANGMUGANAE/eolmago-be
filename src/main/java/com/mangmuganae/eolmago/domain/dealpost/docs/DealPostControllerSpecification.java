@@ -1,5 +1,6 @@
 package com.mangmuganae.eolmago.domain.dealpost.docs;
 
+import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDetailResponseDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchRequestDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchResponseDto;
@@ -21,6 +22,122 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "핫딜 관련 API", description = "핫딜 글을 업로드하고 3단계 검증을 수행합니다.")
 public interface DealPostControllerSpecification {
+
+  @Operation(
+      summary = "핫딜 상세 조회",
+      description = """
+          핫딜 글 한 건의 상세 정보와 댓글 목록을 조회합니다.
+
+          imageFileUrlList 는 글에 등록된 이미지 전체이며, 등록하지 않았으면 빈 배열입니다.
+          userInfo 는 글쓴이 정보이고 imageFileUrl 은 프로필 이미지를 등록하지 않았으면 null 입니다.
+          jjandolRank 의 표시 이름과 등급 순서는 JjandolRank 스키마를 참고하세요.
+
+          dealPostCommentResponseDto 에 댓글 목록과 댓글 수가 함께 내려갑니다.
+          댓글이 없으면 comments 는 빈 배열이고 commentCount 는 0 입니다.
+
+          상태와 무관하게 조회되므로 검증 전(HOLD) 이나 종료(ENDED) 된 글도 ID 를 알면 조회됩니다.
+          조회해도 viewCount 는 증가하지 않습니다.
+          """,
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER, name = "Authorization", description = "Bearer 액세스 토큰",
+              required = true, example = "Bearer eyJhbGciOiJIUzI1NiJ9..."),
+          @Parameter(in = ParameterIn.PATH, name = "dealPostId", description = "조회할 핫딜 글 ID",
+              required = true, example = "1")
+      })
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "핫딜 상세 조회 성공",
+          useReturnTypeSchema = true,
+          content = @Content(
+              examples = @ExampleObject(
+                  name = "SuccessExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 200,
+                        "statusCode": "SUCCESS",
+                        "message": "핫딜 상세 조회에 성공하였습니다.",
+                        "data": {
+                          "imageFileUrlList": [
+                            "/files/8320405b-7667-4863-91a3-1e9903dc9c5f.jpg"
+                          ],
+                          "storeName": "쿠팡",
+                          "productName": "신라면 멀티팩 40개입",
+                          "productPrice": 25400,
+                          "userInfo": {
+                            "nickname": "짠돌이자취러",
+                            "imageFileUrl": "/files/13b2b2ad-cbe8-4849-9724-ed296d82bd7d.png",
+                            "jjandolRank": "BEGINNER"
+                          },
+                          "createdAt": "2026-11-28T14:02:11.482",
+                          "content": "로켓배송으로 샀어요. 쿠폰 중복 적용됩니다.",
+                          "purchaseLink": "https://www.coupang.com/vp/products/1234567890",
+                          "likeCount": 96,
+                          "dislikeCount": 3,
+                          "viewCount": 1350,
+                          "dealPostCommentResponseDto": {
+                            "comments": [
+                              {
+                                "userInfo": {
+                                  "nickname": "절약왕",
+                                  "imageFileUrl": null,
+                                  "jjandolRank": "EXPERT"
+                                },
+                                "commentInfo": {
+                                  "content": "이 가격이면 바로 사야죠",
+                                  "createdAt": "2026-11-28T14:30:02.001"
+                                }
+                              }
+                            ],
+                            "commentCount": 1
+                          }
+                        }
+                      }
+                      """
+              ))),
+      @ApiResponse(responseCode = "401", description = "액세스 토큰이 없거나 유효하지 않음 (본문 responseCode 는 커스텀 코드 1001)",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "AccessTokenInvalidExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 1001,
+                        "statusCode": "ACCESS_TOKEN_INVALID",
+                        "message": "엑세스 토큰이 유효하지 않습니다.",
+                        "data": null
+                      }
+                      """
+              ))),
+      @ApiResponse(responseCode = "404", description = "핫딜 글을 찾을 수 없음",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "PostNotFoundExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 404,
+                        "statusCode": "POST_NOT_FOUND",
+                        "message": "해당 게시글을 찾을 수 없습니다.",
+                        "data": null
+                      }
+                      """
+              ))),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "InternalServerErrorExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 500,
+                        "statusCode": "INTERNAL_SERVER_ERROR",
+                        "message": "서버 내부 오류가 발생했습니다.",
+                        "data": null
+                      }
+                      """
+              )))
+  })
+  ResponseDTO<DealPostDetailResponseDto> getDealPostDetailById(Long dealPostId);
 
   @Operation(
       summary = "핫딜 목록 조회",
