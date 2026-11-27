@@ -1,5 +1,6 @@
 package com.mangmuganae.eolmago.domain.auth.controller;
 
+import com.mangmuganae.eolmago.domain.auth.docs.AuthControllerSpecification;
 import com.mangmuganae.eolmago.domain.auth.dto.RefreshResponseDto;
 import com.mangmuganae.eolmago.domain.auth.service.AuthService;
 import com.mangmuganae.eolmago.global.common.response.ResponseDTO;
@@ -14,10 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
-public class AuthController {
+public class AuthController implements AuthControllerSpecification {
 
   private final AuthService authService;
 
+  @Override
   @PostMapping("/refresh")
   public ResponseDTO<RefreshResponseDto> authRefresh(HttpServletRequest request) {
 
