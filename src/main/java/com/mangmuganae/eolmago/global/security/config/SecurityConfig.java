@@ -52,7 +52,8 @@ public class SecurityConfig {
                 "/api/v1/auth/**",
                 "/oauth2/**",
                 "/login/**",
-                "/files/**"
+                "/files/**",
+                "/test"
             ).permitAll()
             .anyRequest().authenticated()
         )

@@ -78,7 +78,7 @@ public class Notification extends BaseEntity {
         .notificationType(this.notificationType)
         .readYn(this.readYn)
         .dealPostId(this.dealPost.getId())
-        .commentId(this.comment.getId())
+        .commentId(comment != null ? comment.getId() : null)
         .pushedAt(this.getCreatedAt())
         .build();
   }

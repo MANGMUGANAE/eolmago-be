@@ -111,10 +111,11 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
 
   private boolean isPublicPath(String path) {
-    return path.startsWith("/login/oauth2/code") ||
+    return path.equals("/test") ||
+        path.startsWith("/login/oauth2/code") ||
         path.startsWith("/swagger-ui") ||
         path.startsWith("/api/v1/auth/refresh") ||
-        path.startsWith("/files/**") ||
+        path.startsWith("/files") ||
         path.startsWith("/v3/api-docs");
   }
 

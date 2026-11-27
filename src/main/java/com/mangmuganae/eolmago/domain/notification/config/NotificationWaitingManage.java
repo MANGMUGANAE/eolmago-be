@@ -47,6 +47,22 @@ public class NotificationWaitingManage {
 
   }
 
+  /**
+   * 알림 문구에 쓸 만큼만 잘라냅니다. 길이가 짧으면 그대로 사용합니다.
+   */
+  private String summaryOf(String keyword, int maxLength) {
+
+    if (keyword == null || keyword.isBlank()) {
+      return "";
+    }
+
+    if (keyword.length() <= maxLength) {
+      return keyword + " ";
+    }
+
+    return keyword.substring(0, maxLength) + "... ";
+  }
+
   @Async
   public void sendDealNotifications(NotificationWaitingObject notificationWaitingObject) {
 
@@ -65,7 +81,7 @@ public class NotificationWaitingManage {
       for (Alert alert : alertWithoutCategory) {
         if (keyword.contains(alert.getKeyword())) {
           notificationWithoutCategory.add(
-              Notification.of(keyword.substring(1, 12) + "..." + "핫딜이 올라왔어요",
+              Notification.of(summaryOf(keyword, 12) + "핫딜이 올라왔어요",
                   NotificationType.KEYWORD,
                   alert.getUser(), dealPost, null)
           );
@@ -79,7 +95,7 @@ public class NotificationWaitingManage {
       for (Alert alert : alertWithoutKeyword) {
         if (alert.getCategory().equals(category)) {
           notificationWithoutKeyword.add(
-              Notification.of(keyword.substring(0, 30) + "..." + "핫딜이 올라왔어요",
+              Notification.of(summaryOf(keyword, 30) + "핫딜이 올라왔어요",
                   NotificationType.CATEGORY,
                   alert.getUser(), dealPost, null)
           );
