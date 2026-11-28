@@ -3,6 +3,7 @@ package com.mangmuganae.eolmago.domain.dealpost.controller;
 import com.mangmuganae.eolmago.domain.dealpost.docs.DealPostControllerSpecification;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDetailResponseDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDto;
+import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostReactionResponse;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchRequestDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchResponseDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostUploadResponseDto;
@@ -29,6 +30,30 @@ import org.springframework.web.multipart.MultipartFile;
 public class DealPostController implements DealPostControllerSpecification {
 
   private final DealPostService dealPostService;
+
+  @Override
+  @PostMapping("/{dealPostId}/like")
+  public ResponseDTO<DealPostReactionResponse> likeDealPost(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @PathVariable Long dealPostId
+  ) {
+    DealPostReactionResponse dealPostReactionResponse = dealPostService.like(userDetails.getUuid(), dealPostId);
+
+    return ResponseDTO.of(dealPostReactionResponse, "성공적으로 호출되었습니다");
+  }
+
+
+  @Override
+  @PostMapping("/{dealPostId}/dislike")
+  public ResponseDTO<DealPostReactionResponse> dislikeDealPost(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @PathVariable Long dealPostId
+  ) {
+    DealPostReactionResponse dealPostReactionResponse = dealPostService.dislike(userDetails.getUuid(), dealPostId);
+
+    return ResponseDTO.of(dealPostReactionResponse, "성공적으로 호출되었습니다");
+  }
+
 
   @Override
   @GetMapping("/{dealPostId}")

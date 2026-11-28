@@ -3,6 +3,7 @@ package com.mangmuganae.eolmago.domain.dealpost.dto;
 import com.mangmuganae.eolmago.domain.user.entity.JjandolRank;
 import java.time.LocalDateTime;
 import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,6 +24,7 @@ public class DealPostCommentResponseDto {
 
   @Getter
   @Builder
+  @Schema(name = "CommentUserInfo")
   public static class UserInfo {
     private String nickname;
     private String imageFileUrl;

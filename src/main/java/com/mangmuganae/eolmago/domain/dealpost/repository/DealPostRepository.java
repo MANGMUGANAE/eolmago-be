@@ -7,12 +7,32 @@ import java.util.Collection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.core.parameters.P;
 
 public interface DealPostRepository extends JpaRepository<DealPost, Long> {
 
+  @Query("select count(r) from DealPost r where r.user = :user")
   long countByUser(User user);
+
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query("update DealPost d set d.likeCount = d.likeCount + 1 where d = :d")
+  void increaseLikeCount(@Param("d") DealPost dealPost);
+
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query("update DealPost d set d.likeCount = d.likeCount - 1 where d = :d")
+  void decreaseLikeCount(@Param("d") DealPost dealPost);
+
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query("update DealPost d set d.dislikeCount = d.dislikeCount + 1 where d = :d")
+  void increaseDisLikeCount(@Param("d") DealPost dealPost);
+
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query("update DealPost d set d.dislikeCount = d.dislikeCount - 1 where d = :d")
+  void decreaseDisLikeCount(@Param("d") DealPost dealPost);
+
 
   @Query(value = """
       select dealPost from DealPost dealPost

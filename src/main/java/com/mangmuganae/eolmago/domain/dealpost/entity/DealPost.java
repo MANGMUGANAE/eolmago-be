@@ -51,7 +51,7 @@ public class DealPost extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private DealPostStatus dealPostStatus;
 
-  private Integer dealReliabilityScore;
+  private Long dealReliabilityScore;
 
   private Boolean linkVerified; //1단계 : 제휴/리워드 링크 여부 검증 통과
   private Boolean reliabilityVerified; //2단계 : 업로드자 신뢰도 검증 통과
@@ -75,7 +75,7 @@ public class DealPost extends BaseEntity {
   @Builder
   private DealPost(Long id, String purchaseLink, String productName, Integer productPrice,
       String content, Long likeCount, Long dislikeCount, Long viewCount, Integer commentCount,
-      DealPostStatus dealPostStatus, Integer dealReliabilityScore,
+      DealPostStatus dealPostStatus, Long dealReliabilityScore,
       Boolean linkVerified, Boolean reliabilityVerified, Boolean advertisementVerified,
       User user, Category category, Store store) {
 
@@ -118,7 +118,7 @@ public class DealPost extends BaseEntity {
         .commentCount(0)
 
         .dealPostStatus(DealPostStatus.HOLD)
-        .dealReliabilityScore(0)
+        .dealReliabilityScore(0L)
 
         .linkVerified(false)
         .reliabilityVerified(false)
@@ -151,6 +151,22 @@ public class DealPost extends BaseEntity {
 
   public boolean isOwnedBy(User user) {
     return this.user.getId().equals(user.getId());
+  }
+
+  public void updateDealPostStatus(DealPostStatus dealPostStatus) {
+    this.dealPostStatus = dealPostStatus;
+  }
+
+  public void updateDealReliabilityScore(Long dealReliabilityScore) {
+    this.dealReliabilityScore = dealReliabilityScore;
+  }
+
+  public void initLikeReaction() {
+    this.likeCount = 0L;
+  }
+
+  public void initDislikeReaction() {
+    this.dislikeCount = 0L;
   }
 
   private void activateIfAllVerified() {

@@ -213,9 +213,10 @@
       <div class="label">구매 링크</div>
       <div class="box" id="d-link"></div>
       <div class="row">
-        <button onclick="alert('추천 API 미구현')">도움돼요 <span id="d-like"></span></button>
-        <button onclick="alert('비추천 API 미구현')">별로예요 <span id="d-dislike"></span></button>
+        <button id="d-likebtn" onclick="react('like')">도움돼요 <span id="d-like"></span></button>
+        <button id="d-dislikebtn" onclick="react('dislike')">별로예요 <span id="d-dislike"></span></button>
       </div>
+      <div class="muted" id="d-reaction">내 반응: 없음</div>
       <div class="row" style="margin-top:8px">
         <button class="wide fill" onclick="openPurchaseLink()">구매하러 가기</button>
         <button class="off">담기</button>
@@ -482,6 +483,8 @@
 
   async function openDetail(dealPostId) {
     go('detail');
+    detailId = dealPostId;
+    renderReaction('NONE');
     var r = await api('GET', '/api/v1/deal-posts/' + dealPostId);
     if (!r.ok) { alert(r.json ? r.json.message : '조회 실패'); return; }
     var d = r.json.data;
@@ -504,6 +507,7 @@
     var u = d.userInfo || {};
     if (u.imageFileUrl) el('d-userimg').src = u.imageFileUrl;
     else el('d-userimg').removeAttribute('src');
+    renderReaction(u.reactionType || 'NONE');
     el('d-nickname').textContent = u.nickname || '(닉네임 없음)';
     el('d-rank').textContent = RANK[u.jjandolRank] || '-';
     el('d-created').textContent = timeAgo(d.createdAt);
@@ -531,6 +535,26 @@
         + '<div class="muted">' + timeAgo(cm.commentInfo.createdAt) + '</div>';
       box.appendChild(div);
     });
+  }
+
+  var detailId = null;
+
+  async function react(kind) {
+    if (!detailId) return;
+    var r = await api('POST', '/api/v1/deal-posts/' + detailId + '/' + kind);
+    if (!r.ok) { alert(r.json ? r.json.message : '반응 실패'); return; }
+
+    var d = r.json.data;
+    el('d-like').textContent = d.likeCount;
+    el('d-dislike').textContent = d.dislikeCount;
+    renderReaction(d.reactionType);
+  }
+
+  function renderReaction(type) {
+    var label = { LIKE: '도움돼요', DISLIKE: '별로예요', NONE: '없음' };
+    el('d-reaction').textContent = '내 반응: ' + (label[type] || '없음');
+    el('d-likebtn').className = type === 'LIKE' ? 'fill' : '';
+    el('d-dislikebtn').className = type === 'DISLIKE' ? 'fill' : '';
   }
 
   function openPurchaseLink() {

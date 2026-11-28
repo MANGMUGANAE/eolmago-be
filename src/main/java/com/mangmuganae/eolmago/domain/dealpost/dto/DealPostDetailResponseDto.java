@@ -2,11 +2,13 @@ package com.mangmuganae.eolmago.domain.dealpost.dto;
 
 import com.mangmuganae.eolmago.domain.comment.entity.Comment;
 import com.mangmuganae.eolmago.domain.dealpost.entity.DealPost;
+import com.mangmuganae.eolmago.domain.dealpostreaction.entity.ReactionType;
 import com.mangmuganae.eolmago.domain.imagefile.entity.ImageFile;
 import com.mangmuganae.eolmago.domain.user.entity.JjandolRank;
 import com.mangmuganae.eolmago.domain.user.entity.User;
 import java.time.LocalDateTime;
 import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,14 +44,18 @@ public class DealPostDetailResponseDto {
 
   @Getter
   @Builder
+  @Schema(name = "DealPostDetailUserInfo")
   public static class UserInfo {
     private String nickname;
     private String imageFileUrl;
     private JjandolRank jjandolRank;
+
+    @Schema(description = "요청한 사용자가 이 글에 남긴 반응입니다. 누르지 않았으면 NONE 입니다.")
+    private ReactionType reactionType;
   }
 
   public static DealPostDetailResponseDto createByDealPostAndUserAndComments(
-      DealPost dealPost, User user, List<Comment> comments) {
+      DealPost dealPost, User user, List<Comment> comments, ReactionType reactionType) {
 
     List<String> imageFileUrlList = dealPost.getImageFiles().stream()
         .map(ImageFile::getImageFileUrl).toList();
@@ -58,6 +64,7 @@ public class DealPostDetailResponseDto {
         .nickname(user.getNickname())
         .imageFileUrl(user.getFile() != null ? user.getFile().getImageFileUrl() : null)
         .jjandolRank(user.getJjandolRank())
+        .reactionType(reactionType)
         .build();
 
     DealPostCommentResponseDto dealPostCommentResponseDto1 = DealPostCommentResponseDto.createByComments(

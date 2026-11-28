@@ -1,6 +1,7 @@
 package com.mangmuganae.eolmago.domain.dealpost.docs;
 
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDetailResponseDto;
+import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostReactionResponse;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchRequestDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchResponseDto;
@@ -24,6 +25,240 @@ import org.springframework.web.multipart.MultipartFile;
 public interface DealPostControllerSpecification {
 
   @Operation(
+      summary = "도움돼요",
+      description = """
+          핫딜 글에 도움돼요를 남깁니다. 한 사용자는 글 하나에 반응을 하나만 남길 수 있습니다.
+
+          같은 버튼을 다시 누르면 반응이 취소되고 reactionType 이 NONE 으로 내려갑니다.
+          별로예요를 누른 상태에서 호출하면 도움돼요로 바뀌며 양쪽 카운트가 함께 조정됩니다.
+
+          reactionType 은 이 호출 이후 사용자의 현재 반응 상태입니다.
+          반응 결과로 핫딜 신뢰도 점수가 20 미만이 되면 글이 HOLD 상태로 바뀌어 목록 조회에서 사라집니다.
+          """,
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER, name = "Authorization", description = "Bearer 액세스 토큰",
+              required = true, example = "Bearer eyJhbGciOiJIUzI1NiJ9..."),
+          @Parameter(in = ParameterIn.PATH, name = "dealPostId", description = "반응을 남길 핫딜 글 ID",
+              required = true, example = "1")
+      })
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "도움돼요 반영 성공",
+          useReturnTypeSchema = true,
+          content = @Content(
+              examples = {
+                  @ExampleObject(
+                      name = "AppliedExample",
+                      summary = "도움돼요를 남긴 경우",
+                      value = """
+                          {
+                            "localDateTime": "2026-11-28T15:30:00.123",
+                            "responseCode": 200,
+                            "statusCode": "SUCCESS",
+                            "message": "성공적으로 호출되었습니다",
+                            "data": {
+                              "reactionType": "LIKE",
+                              "likeCount": 97,
+                              "dislikeCount": 3
+                            }
+                          }
+                          """
+                  ),
+                  @ExampleObject(
+                      name = "CanceledExample",
+                      summary = "같은 버튼을 다시 눌러 취소한 경우",
+                      value = """
+                          {
+                            "localDateTime": "2026-11-28T15:30:00.123",
+                            "responseCode": 200,
+                            "statusCode": "SUCCESS",
+                            "message": "성공적으로 호출되었습니다",
+                            "data": {
+                              "reactionType": "NONE",
+                              "likeCount": 96,
+                              "dislikeCount": 3
+                            }
+                          }
+                          """
+                  )
+              })),
+      @ApiResponse(responseCode = "401", description = "액세스 토큰이 없거나 유효하지 않음 (본문 responseCode 는 커스텀 코드 1001)",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "AccessTokenInvalidExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 1001,
+                        "statusCode": "ACCESS_TOKEN_INVALID",
+                        "message": "엑세스 토큰이 유효하지 않습니다.",
+                        "data": null
+                      }
+                      """
+              ))),
+      @ApiResponse(responseCode = "404", description = "핫딜 글 또는 사용자를 찾을 수 없음",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = {
+                  @ExampleObject(
+                      name = "PostNotFoundExample",
+                      value = """
+                          {
+                            "localDateTime": "2026-11-28T15:30:00.123",
+                            "responseCode": 404,
+                            "statusCode": "POST_NOT_FOUND",
+                            "message": "해당 게시글을 찾을 수 없습니다.",
+                            "data": null
+                          }
+                          """
+                  ),
+                  @ExampleObject(
+                      name = "UserNotFoundExample",
+                      value = """
+                          {
+                            "localDateTime": "2026-11-28T15:30:00.123",
+                            "responseCode": 404,
+                            "statusCode": "USER_NOT_FOUND",
+                            "message": "해당 사용자를 찾을 수 없습니다.",
+                            "data": null
+                          }
+                          """
+                  )
+              })),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "InternalServerErrorExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 500,
+                        "statusCode": "INTERNAL_SERVER_ERROR",
+                        "message": "서버 내부 오류가 발생했습니다.",
+                        "data": null
+                      }
+                      """
+              )))
+  })
+  ResponseDTO<DealPostReactionResponse> likeDealPost(CustomUserDetails userDetails, Long dealPostId);
+
+
+  @Operation(
+      summary = "별로예요",
+      description = """
+          핫딜 글에 별로예요를 남깁니다. 한 사용자는 글 하나에 반응을 하나만 남길 수 있습니다.
+
+          같은 버튼을 다시 누르면 반응이 취소되고 reactionType 이 NONE 으로 내려갑니다.
+          도움돼요를 누른 상태에서 호출하면 별로예요로 바뀌며 양쪽 카운트가 함께 조정됩니다.
+
+          reactionType 은 이 호출 이후 사용자의 현재 반응 상태입니다.
+          반응 결과로 핫딜 신뢰도 점수가 20 미만이 되면 글이 HOLD 상태로 바뀌어 목록 조회에서 사라집니다.
+          """,
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER, name = "Authorization", description = "Bearer 액세스 토큰",
+              required = true, example = "Bearer eyJhbGciOiJIUzI1NiJ9..."),
+          @Parameter(in = ParameterIn.PATH, name = "dealPostId", description = "반응을 남길 핫딜 글 ID",
+              required = true, example = "1")
+      })
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "별로예요 반영 성공",
+          useReturnTypeSchema = true,
+          content = @Content(
+              examples = {
+                  @ExampleObject(
+                      name = "AppliedExample",
+                      summary = "별로예요를 남긴 경우",
+                      value = """
+                          {
+                            "localDateTime": "2026-11-28T15:30:00.123",
+                            "responseCode": 200,
+                            "statusCode": "SUCCESS",
+                            "message": "성공적으로 호출되었습니다",
+                            "data": {
+                              "reactionType": "DISLIKE",
+                              "likeCount": 96,
+                              "dislikeCount": 4
+                            }
+                          }
+                          """
+                  ),
+                  @ExampleObject(
+                      name = "CanceledExample",
+                      summary = "같은 버튼을 다시 눌러 취소한 경우",
+                      value = """
+                          {
+                            "localDateTime": "2026-11-28T15:30:00.123",
+                            "responseCode": 200,
+                            "statusCode": "SUCCESS",
+                            "message": "성공적으로 호출되었습니다",
+                            "data": {
+                              "reactionType": "NONE",
+                              "likeCount": 96,
+                              "dislikeCount": 3
+                            }
+                          }
+                          """
+                  )
+              })),
+      @ApiResponse(responseCode = "401", description = "액세스 토큰이 없거나 유효하지 않음 (본문 responseCode 는 커스텀 코드 1001)",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "AccessTokenInvalidExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 1001,
+                        "statusCode": "ACCESS_TOKEN_INVALID",
+                        "message": "엑세스 토큰이 유효하지 않습니다.",
+                        "data": null
+                      }
+                      """
+              ))),
+      @ApiResponse(responseCode = "404", description = "핫딜 글 또는 사용자를 찾을 수 없음",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = {
+                  @ExampleObject(
+                      name = "PostNotFoundExample",
+                      value = """
+                          {
+                            "localDateTime": "2026-11-28T15:30:00.123",
+                            "responseCode": 404,
+                            "statusCode": "POST_NOT_FOUND",
+                            "message": "해당 게시글을 찾을 수 없습니다.",
+                            "data": null
+                          }
+                          """
+                  ),
+                  @ExampleObject(
+                      name = "UserNotFoundExample",
+                      value = """
+                          {
+                            "localDateTime": "2026-11-28T15:30:00.123",
+                            "responseCode": 404,
+                            "statusCode": "USER_NOT_FOUND",
+                            "message": "해당 사용자를 찾을 수 없습니다.",
+                            "data": null
+                          }
+                          """
+                  )
+              })),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "InternalServerErrorExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 500,
+                        "statusCode": "INTERNAL_SERVER_ERROR",
+                        "message": "서버 내부 오류가 발생했습니다.",
+                        "data": null
+                      }
+                      """
+              )))
+  })
+  ResponseDTO<DealPostReactionResponse> dislikeDealPost(CustomUserDetails userDetails, Long dealPostId);
+
+
+  @Operation(
       summary = "핫딜 상세 조회",
       description = """
           핫딜 글 한 건의 상세 정보와 댓글 목록을 조회합니다.
@@ -31,6 +266,10 @@ public interface DealPostControllerSpecification {
           imageFileUrlList 는 글에 등록된 이미지 전체이며, 등록하지 않았으면 빈 배열입니다.
           userInfo 는 글쓴이 정보이고 imageFileUrl 은 프로필 이미지를 등록하지 않았으면 null 입니다.
           jjandolRank 의 표시 이름과 등급 순서는 JjandolRank 스키마를 참고하세요.
+
+          userInfo.reactionType 은 글쓴이가 아니라 요청한 사용자가 이 글에 남긴 반응입니다.
+          LIKE 면 도움돼요, DISLIKE 면 별로예요를 누른 상태이고, 아무것도 누르지 않았으면 NONE 입니다.
+          상세에 들어갔을 때 도움돼요 / 별로예요 버튼의 선택 상태를 이 값으로 표시하면 됩니다.
 
           dealPostCommentResponseDto 에 댓글 목록과 댓글 수가 함께 내려갑니다.
           댓글이 없으면 comments 는 빈 배열이고 commentCount 는 0 입니다.
@@ -66,7 +305,8 @@ public interface DealPostControllerSpecification {
                           "userInfo": {
                             "nickname": "짠돌이자취러",
                             "imageFileUrl": "/files/13b2b2ad-cbe8-4849-9724-ed296d82bd7d.png",
-                            "jjandolRank": "BEGINNER"
+                            "jjandolRank": "BEGINNER",
+                            "reactionType": "LIKE"
                           },
                           "createdAt": "2026-11-28T14:02:11.482",
                           "content": "로켓배송으로 샀어요. 쿠폰 중복 적용됩니다.",

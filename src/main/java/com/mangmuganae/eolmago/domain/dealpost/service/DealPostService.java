@@ -12,6 +12,7 @@ import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostCommentResponseDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDetailResponseDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostPreivewResponseDto;
+import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostReactionResponse;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchRequestDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostSearchResponseDto;
 import com.mangmuganae.eolmago.domain.dealpost.dto.DealPostUploadResponseDto;
@@ -23,6 +24,9 @@ import com.mangmuganae.eolmago.domain.dealpost.exception.DealPostAccessDeniedExc
 import com.mangmuganae.eolmago.domain.dealpost.exception.DealPostNotFoundException;
 import com.mangmuganae.eolmago.domain.dealpost.exception.ImageFileCountExceededException;
 import com.mangmuganae.eolmago.domain.dealpost.repository.DealPostRepository;
+import com.mangmuganae.eolmago.domain.dealpostreaction.entity.DealPostReaction;
+import com.mangmuganae.eolmago.domain.dealpostreaction.entity.ReactionType;
+import com.mangmuganae.eolmago.domain.dealpostreaction.repository.DealPostReactionRepository;
 import com.mangmuganae.eolmago.domain.imagefile.entity.ImageFile;
 import com.mangmuganae.eolmago.domain.imagefile.repository.ImageFileRepository;
 import com.mangmuganae.eolmago.domain.notification.config.NotificationWaitingManage;
@@ -30,6 +34,7 @@ import com.mangmuganae.eolmago.domain.notification.dto.NotificationWaitingObject
 import com.mangmuganae.eolmago.domain.notification.entity.Notification;
 import com.mangmuganae.eolmago.domain.notification.entity.NotificationType;
 import com.mangmuganae.eolmago.domain.notification.repository.NotificationRepository;
+import com.mangmuganae.eolmago.domain.reportpost.repository.ReportPostRepository;
 import com.mangmuganae.eolmago.domain.store.entity.Store;
 import com.mangmuganae.eolmago.domain.store.exception.PurchaseLinkMissingException;
 import com.mangmuganae.eolmago.domain.store.exception.StoreNotFoundException;
@@ -42,6 +47,7 @@ import com.mangmuganae.eolmago.global.exception.ErrorCode;
 import com.mangmuganae.eolmago.global.security.exception.UserNotFoundException;
 import com.mangmuganae.eolmago.infra.impersonator.ImpersonatorUtil;
 import com.mangmuganae.eolmago.infra.lamda.LamdaUtil;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -77,6 +83,9 @@ public class DealPostService {
   //광고일 확률이 이 값 이상이면 광고로 판단합니다.
   private static final double ADVERTISEMENT_THRESHOLD = 0.5;
 
+  //핫딜 신뢰도 점수가 이 값 미만이면 글을 보류 처리합니다.
+  private static final int BLIND_RELIABILITY_SCORE = 20;
+
   //핫딜 필터에서 요구하는 업로드자 최소 등급입니다. (짠돌 중수)
   private static final int HOT_DEAL_MIN_RANK_LEVEL = JjandolRank.INTERMEDIATE.getLevel();
 
@@ -95,6 +104,8 @@ public class DealPostService {
   private final CategoryRepository categoryRepository;
   private final StoreRepository storeRepository;
   private final ImageFileRepository imageFileRepository;
+  private final DealPostReactionRepository dealPostReactionRepository;
+  private final ReportPostRepository reportPostRepository;
 
   private final FileStorage fileStorage;
   private final ImpersonatorUtil impersonatorUtil;
@@ -369,7 +380,169 @@ public class DealPostService {
 
     List<Comment> comments = commentRepository.findByDealPost(dealPost);
 
-    return DealPostDetailResponseDto.createByDealPostAndUserAndComments(dealPost, user, comments);
+    ReactionType reactionType;
+
+    DealPostReaction dealPostReaction = dealPostReactionRepository.findByUserAndDealPost(user, dealPost).orElse(null);
+    if (dealPostReaction == null) {
+      reactionType = ReactionType.NONE;
+    } else {
+      reactionType = dealPostReaction.getReactionType();
+    }
+
+    return DealPostDetailResponseDto.createByDealPostAndUserAndComments(dealPost, user, comments, reactionType);
 
   }
+
+  @Transactional
+  public DealPostReactionResponse like(String uuid, Long dealPostId) {
+
+    User user = userRepository.findByUuid(uuid).orElseThrow(
+        () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND)
+    );
+
+    DealPost dealPost = dealPostRepository.findById(dealPostId).orElseThrow(
+        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
+    );
+
+    if (dealPost.getLikeCount() < 0) {
+      dealPost.initLikeReaction();
+      dealPostRepository.flush();
+    }
+
+    if (dealPost.getDislikeCount() < 0) {
+      dealPost.initDislikeReaction();
+      dealPostRepository.flush();
+    }
+
+    DealPostReaction dealPostReaction = dealPostReactionRepository.findByUserAndDealPost(user, dealPost).orElse(null);
+
+    if (dealPostReaction != null) {
+
+      if (dealPostReaction.getReactionType().equals(ReactionType.LIKE)) {
+        dealPostReactionRepository.delete(dealPostReaction);
+        dealPostRepository.decreaseLikeCount(dealPost);
+        return reactionResponseOf(dealPostId, ReactionType.NONE);
+      } else {
+        dealPostReactionRepository.delete(dealPostReaction);
+        dealPostRepository.decreaseDisLikeCount(dealPost);
+        DealPostReaction newDealPostReaction = DealPostReaction.like(user, dealPost);
+        dealPostReactionRepository.save(newDealPostReaction);
+        dealPostRepository.increaseLikeCount(dealPost);
+        return reactionResponseOf(dealPostId, ReactionType.LIKE);
+      }
+    }
+
+    DealPostReaction newDealPostReaction = DealPostReaction.like(user, dealPost);
+    dealPostReactionRepository.save(newDealPostReaction);
+
+    dealPostRepository.increaseLikeCount(dealPost);
+    applyBlindIfUnreliable(user, dealPostId);
+
+    return reactionResponseOf(dealPostId, ReactionType.LIKE);
+  }
+
+  @Transactional
+  public DealPostReactionResponse dislike(String uuid, Long dealPostId) {
+
+    User user = userRepository.findByUuid(uuid).orElseThrow(
+        () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND)
+    );
+
+    DealPost dealPost = dealPostRepository.findById(dealPostId).orElseThrow(
+        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
+    );
+
+    DealPostReaction dealPostReaction = dealPostReactionRepository.findByUserAndDealPost(user, dealPost).orElse(null);
+
+    if (dealPostReaction != null) {
+
+      if (dealPostReaction.getReactionType().equals(ReactionType.DISLIKE)) {
+        dealPostReactionRepository.delete(dealPostReaction);
+        dealPostRepository.decreaseDisLikeCount(dealPost);
+        return reactionResponseOf(dealPostId, ReactionType.NONE);
+      } else {
+        dealPostReactionRepository.delete(dealPostReaction);
+        dealPostRepository.decreaseLikeCount(dealPost);
+        DealPostReaction newDealPostReaction = DealPostReaction.dislike(user, dealPost);
+        dealPostReactionRepository.save(newDealPostReaction);
+        dealPostRepository.increaseDisLikeCount(dealPost);
+        return reactionResponseOf(dealPostId, ReactionType.DISLIKE);
+      }
+    }
+
+    DealPostReaction newDealPostReaction = DealPostReaction.dislike(user, dealPost);
+    dealPostReactionRepository.save(newDealPostReaction);
+
+    dealPostRepository.increaseDisLikeCount(dealPost);
+
+    applyBlindIfUnreliable(user, dealPostId);
+
+    return reactionResponseOf(dealPostId, ReactionType.DISLIKE);
+  }
+
+  /**
+   * 신뢰도 점수가 기준 미만이면 글을 보류 처리합니다.
+   * 벌크 업데이트 직후의 dealPost 는 준영속이라 변경이 반영되지 않으므로 다시 조회한 엔티티에 적용합니다.
+   */
+  private void applyBlindIfUnreliable(User user, Long dealPostId) {
+
+    DealPost reloaded = dealPostRepository.findById(dealPostId).orElseThrow(
+        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
+    );
+
+    if (calculateDealReliabilityScore(user, reloaded) >= BLIND_RELIABILITY_SCORE) {
+      reloaded.updateDealPostStatus(DealPostStatus.HOLD);
+    }
+  }
+
+  /**
+   * 카운트는 벌크 업데이트로 변경되어 영속성 컨텍스트가 비워지므로, 응답에는 다시 조회한 값을 담습니다.
+   */
+  private DealPostReactionResponse reactionResponseOf(Long dealPostId, ReactionType reactionType) {
+
+    DealPost reloaded = dealPostRepository.findById(dealPostId).orElseThrow(
+        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
+    );
+
+    return DealPostReactionResponse
+        .of(reactionType, reloaded.getLikeCount(), reloaded.getDislikeCount());
+  }
+
+  public long calculateDealReliabilityScore(User user, DealPost dealPost) {
+    dealPostRepository.flush();
+    dealPostReactionRepository.flush();
+
+    //기존 블라인드 점수
+    long oldReliabilityScore = dealPost.getDealReliabilityScore();
+
+    //리액션 당사자 작성 글 수
+    long dealPostCount = dealPostRepository.countByUser(user);
+    //리액션 당사자 작성 댓글 수
+    long commentCount = commentRepository.countByUser(user);
+
+
+    //(1) 가입 7일 이내인지 확인
+    //(2) 글, 댓글 작성이 0건인지 확인
+    if (user.getCreatedAt().isAfter(LocalDateTime.now().minusDays(7)) || (dealPostCount == 0 || commentCount == 0)) {
+      return oldReliabilityScore;
+    }
+
+    //해당 게시글의 신고수
+    long reportPostCount = reportPostRepository.findReportPostCountByDealPost(dealPost);
+
+    //해당 게시글의 좋아요 수
+    long likeCount = dealPostReactionRepository.countByDealPostAndType(dealPost, ReactionType.LIKE);
+
+    //해당 게시글의 싫어요 수
+    long dislikeCount = dealPostReactionRepository.countByDealPostAndType(dealPost, ReactionType.DISLIKE);
+
+    long newReliabilityScore = 3 * reportPostCount + Math.max(0, dislikeCount - likeCount);
+
+    dealPost.updateDealReliabilityScore(newReliabilityScore);
+    return newReliabilityScore;
+
+  }
+
+
+
 }
