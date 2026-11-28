@@ -79,8 +79,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     } else {
       log.info("[" + request.getRemoteAddr() + "]:"
           + "[" + method + ":" + url + "](no token)");
-      handleAccessTokenInvalid(response);
-      return;
     }
 
     filterChain.doFilter(request, response);
