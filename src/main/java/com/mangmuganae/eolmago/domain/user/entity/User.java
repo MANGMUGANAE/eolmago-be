@@ -140,4 +140,8 @@ public class User extends BaseEntity {
     this.nickname = nickname;
   }
 
+  public void updateReliabillityScore(Double userReliabillityScore){
+    this.userReliabillityScore = userReliabillityScore;
+  }
+
 }

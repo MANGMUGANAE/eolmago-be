@@ -4,16 +4,24 @@ import com.mangmuganae.eolmago.domain.dealpost.entity.DealPost;
 import com.mangmuganae.eolmago.domain.dealpost.entity.DealPostStatus;
 import com.mangmuganae.eolmago.domain.user.entity.User;
 import java.util.Collection;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.security.core.parameters.P;
 
 public interface DealPostRepository extends JpaRepository<DealPost, Long> {
 
+
+  @Query("select d from DealPost d "
+      + "where d.user = :user and d.dealPostStatus = :dealPostStatus "
+      + "order by d.id desc limit 1")
+  Optional<DealPost> findPreviousDealPost(User user, DealPostStatus dealPostStatus);
+
+  @Query("select count(distinct d.purchaseLink) from DealPost d where d.user = :user")
+  long countDistinctPurchaseLinkByUser(User user);
   @Query("select count(r) from DealPost r where r.user = :user")
   long countByUser(User user);
 
@@ -76,4 +84,5 @@ public interface DealPostRepository extends JpaRepository<DealPost, Long> {
       @Param("maxReliabilityScore") int maxReliabilityScore,
       Pageable pageable);
 
+  long countByUserAndDealPostStatus(User user, DealPostStatus dealPostStatus);
 }

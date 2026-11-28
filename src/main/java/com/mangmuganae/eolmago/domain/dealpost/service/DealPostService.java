@@ -47,8 +47,8 @@ import com.mangmuganae.eolmago.global.exception.ErrorCode;
 import com.mangmuganae.eolmago.global.security.exception.UserNotFoundException;
 import com.mangmuganae.eolmago.infra.impersonator.ImpersonatorUtil;
 import com.mangmuganae.eolmago.infra.lamda.LamdaUtil;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +57,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -230,7 +229,26 @@ public class DealPostService {
     DealPost dealPost = findOwnedDealPost(dealPostId, uuid);
 
     User uploader = dealPost.getUser();
+
+
     long uploadedPostCount = dealPostRepository.countByUser(uploader);
+    long uploadedAdPostCount = dealPostRepository.countByUserAndDealPostStatus(uploader, DealPostStatus.HOLD);
+    long uploadedOkPostCount = dealPostRepository.countByUserAndDealPostStatus(uploader, DealPostStatus.ACTIVE);
+    long uploadedDistinctUrlCount = dealPostRepository.countDistinctPurchaseLinkByUser(uploader);
+
+    long likeCount = dealPostReactionRepository.countReceivedByUserAndReactionType(uploader, ReactionType.LIKE);
+    long dislikeCount = dealPostReactionRepository.countReceivedByUserAndReactionType(uploader, ReactionType.DISLIKE);
+
+    DealPost previousDealPost = dealPostRepository
+        .findPreviousDealPost(uploader, DealPostStatus.ACTIVE)
+        .orElse(null);
+
+    double reliabilityScore = calculateReliabilityScore(uploadedPostCount, uploadedAdPostCount, uploadedDistinctUrlCount,
+        uploadedOkPostCount, likeCount, dislikeCount, previousDealPost);
+
+    uploader.updateReliabillityScore(reliabilityScore);
+
+    System.out.println("점수 : " + reliabilityScore);
 
     boolean passed = uploadedPostCount < RELIABILITY_EXCLUSION_POST_COUNT
         || reliabilityScoreOf(uploader) > RELIABILITY_PASS_SCORE;
@@ -563,6 +581,22 @@ public class DealPostService {
     dealPost.updateDealReliabilityScore(newReliabilityScore);
     return newReliabilityScore;
 
+  }
+
+  private double calculateReliabilityScore(long uploadedPostCount, long uploadedAdPostCount,
+      long uploadedDistinctUrlCount, long uploadedOkPostCount,
+      long likeCount, long dislikeCount, DealPost previousDealPost) {
+
+    double c = uploadedPostCount == 0 ? 1.0
+        : (double) (uploadedPostCount - uploadedAdPostCount) / uploadedPostCount;
+    double v = uploadedOkPostCount == 0 ? 1.0
+        : (double) uploadedDistinctUrlCount / uploadedOkPostCount;
+    double a = (likeCount + dislikeCount) == 0 ? 0.5
+        : (double) likeCount / (likeCount + dislikeCount);
+    double t = previousDealPost == null ? 1.0
+        : Math.min(1.0, Duration.between(previousDealPost.getCreatedAt(), LocalDateTime.now()).toMinutes() / 60.0);
+
+    return 0.6 * c + 0.2 * v + 0.1 * a + 0.1 * t;
   }
 
 

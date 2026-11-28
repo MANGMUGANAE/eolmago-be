@@ -19,4 +19,8 @@ public interface DealPostReactionRepository extends JpaRepository<DealPostReacti
   Optional<DealPostReaction> findByUserAndDealPost(User user, DealPost dealPost);
 
 
+
+  @Query("select count(r) from DealPostReaction r "
+      + "where r.dealPost.user = :user and r.reactionType = :reactionType")
+  long countReceivedByUserAndReactionType(User user, ReactionType reactionType);
 }
