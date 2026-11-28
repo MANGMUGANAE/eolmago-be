@@ -272,6 +272,9 @@ public interface DealPostControllerSpecification {
           상세에 들어갔을 때 도움돼요 / 별로예요 버튼의 선택 상태를 이 값으로 표시하면 됩니다.
 
           dealPostCommentResponseDto 에 댓글 목록과 댓글 수가 함께 내려갑니다.
+          comments 에는 댓글만 담기고, 각 댓글의 replies 에 그 댓글의 대댓글이 들어갑니다.
+          대댓글의 replies 는 항상 빈 배열이며, 깊이는 2 단계까지만 존재합니다.
+          commentCount 는 대댓글을 포함한 전체 개수입니다.
           댓글이 없으면 comments 는 빈 배열이고 commentCount 는 0 입니다.
 
           상태와 무관하게 조회되므로 검증 전(HOLD) 이나 종료(ENDED) 된 글도 ID 를 알면 조회됩니다.
@@ -317,6 +320,8 @@ public interface DealPostControllerSpecification {
                           "dealPostCommentResponseDto": {
                             "comments": [
                               {
+                                "commentId": 48,
+                                "parentCommentId": null,
                                 "userInfo": {
                                   "nickname": "절약왕",
                                   "imageFileUrl": null,
@@ -325,10 +330,26 @@ public interface DealPostControllerSpecification {
                                 "commentInfo": {
                                   "content": "이 가격이면 바로 사야죠",
                                   "createdAt": "2026-11-28T14:30:02.001"
-                                }
+                                },
+                                "replies": [
+                                  {
+                                    "commentId": 52,
+                                    "parentCommentId": 48,
+                                    "userInfo": {
+                                      "nickname": "짠돌이자취러",
+                                      "imageFileUrl": null,
+                                      "jjandolRank": "BEGINNER"
+                                    },
+                                    "commentInfo": {
+                                      "content": "저도 방금 주문했어요",
+                                      "createdAt": "2026-11-28T14:41:11.900"
+                                    },
+                                    "replies": []
+                                  }
+                                ]
                               }
                             ],
-                            "commentCount": 1
+                            "commentCount": 2
                           }
                         }
                       }

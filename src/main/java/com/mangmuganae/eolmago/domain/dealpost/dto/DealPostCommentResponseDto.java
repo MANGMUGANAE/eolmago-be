@@ -1,9 +1,12 @@
 package com.mangmuganae.eolmago.domain.dealpost.dto;
 
 import com.mangmuganae.eolmago.domain.user.entity.JjandolRank;
-import java.time.LocalDateTime;
-import java.util.List;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,43 +44,78 @@ public class DealPostCommentResponseDto {
   @Getter
   @Builder
   public static class Comment {
+    private Long commentId;
+    private Long parentCommentId;
     private UserInfo userInfo;
     private CommentInfo commentInfo;
+
+    @Schema(description = "이 댓글에 달린 대댓글입니다. 대댓글에는 항상 빈 배열입니다.")
+    private List<Comment> replies;
   }
 
+  public static DealPostCommentResponseDto createByComments(
+      List<com.mangmuganae.eolmago.domain.comment.entity.Comment> comments) {
 
-  public static DealPostCommentResponseDto createByComments(List<com.mangmuganae.eolmago.domain.comment.entity.Comment> comments) {
-    List<Comment> comments1 = comments.stream()
-        .map(comment -> {
+    Map<Long, List<Comment>> repliesByParentId = new LinkedHashMap<>();
+    List<Comment> parents = new ArrayList<>();
 
-          UserInfo userInfo = UserInfo.builder()
-              .nickname(comment.getUser().getNickname())
-              .imageFileUrl(comment.getUser().getFile() != null
-                  ? comment.getUser().getFile().getImageFileUrl()
-                  : null)
-              .jjandolRank(comment.getUser().getJjandolRank())
-              .build();
+    comments.stream()
+        .sorted((left, right) -> Long.compare(left.getId(), right.getId()))
+        .forEach(comment -> {
+          Long parentCommentId = comment.getComment() == null
+              ? null
+              : comment.getComment().getId();
 
-          CommentInfo commentInfo = CommentInfo.builder()
-              .content(comment.getContent())
-              .createdAt(comment.getCreatedAt())
-              .build();
+          Comment converted = convert(comment, parentCommentId);
 
-          Comment comment1 = Comment.builder()
-              .userInfo(userInfo)
-              .commentInfo(commentInfo)
-              .build();
+          if (parentCommentId == null) {
+            parents.add(converted);
+          } else {
+            repliesByParentId
+                .computeIfAbsent(parentCommentId, key -> new ArrayList<>())
+                .add(converted);
+          }
+        });
 
-          return comment1;
-        }).toList();
+    List<Comment> result = parents.stream()
+        .map(parent -> Comment.builder()
+            .commentId(parent.getCommentId())
+            .parentCommentId(null)
+            .userInfo(parent.getUserInfo())
+            .commentInfo(parent.getCommentInfo())
+            .replies(repliesByParentId.getOrDefault(parent.getCommentId(), List.of()))
+            .build())
+        .toList();
 
-    DealPostCommentResponseDto response = DealPostCommentResponseDto.builder()
-        .comments(comments1)
-        .commentCount(comments1.size())
+    return DealPostCommentResponseDto.builder()
+        .comments(result)
+        .commentCount(comments.size())
+        .build();
+  }
+
+  private static Comment convert(
+      com.mangmuganae.eolmago.domain.comment.entity.Comment comment, Long parentCommentId) {
+
+    UserInfo userInfo = UserInfo.builder()
+        .nickname(comment.getUser().getNickname())
+        .imageFileUrl(comment.getUser().getFile() != null
+            ? comment.getUser().getFile().getImageFileUrl()
+            : null)
+        .jjandolRank(comment.getUser().getJjandolRank())
         .build();
 
-    return response;
-  }
+    CommentInfo commentInfo = CommentInfo.builder()
+        .content(comment.getContent())
+        .createdAt(comment.getCreatedAt())
+        .build();
 
+    return Comment.builder()
+        .commentId(comment.getId())
+        .parentCommentId(parentCommentId)
+        .userInfo(userInfo)
+        .commentInfo(commentInfo)
+        .replies(List.of())
+        .build();
+  }
 
 }

@@ -224,7 +224,7 @@
     </div>
     <div class="sec">댓글 <span id="d-commentcount"></span></div>
     <div id="d-comments"></div>
-    <div class="pad"><button class="wide off">댓글 작성 (API 미구현)</button></div>
+    <div class="pad"><button class="wide" onclick="writeComment(null)">댓글 작성</button></div>
   </div>
 
   <!-- 4-1 핫딜 공유 -->
@@ -527,13 +527,10 @@
       box.innerHTML = '<div class="pad muted">첫 댓글을 남겨보세요.</div>';
     }
     (c.comments || []).forEach(function (cm) {
-      var div = document.createElement('div');
-      div.className = 'noti';
-      div.innerHTML = '<div>' + (cm.userInfo.nickname || '-')
-        + ' <span class="tag">' + (RANK[cm.userInfo.jjandolRank] || '-') + '</span></div>'
-        + '<div>' + cm.commentInfo.content + '</div>'
-        + '<div class="muted">' + timeAgo(cm.commentInfo.createdAt) + '</div>';
-      box.appendChild(div);
+      box.appendChild(commentRow(cm, false));
+      (cm.replies || []).forEach(function (re) {
+        box.appendChild(commentRow(re, true));
+      });
     });
   }
 
@@ -555,6 +552,52 @@
     el('d-reaction').textContent = '내 반응: ' + (label[type] || '없음');
     el('d-likebtn').className = type === 'LIKE' ? 'fill' : '';
     el('d-dislikebtn').className = type === 'DISLIKE' ? 'fill' : '';
+  }
+
+  function commentRow(cm, isReply) {
+    var div = document.createElement('div');
+    div.className = 'noti';
+    if (isReply) {
+      div.style.paddingLeft = '32px';
+      div.style.background = '#f5f5f5';
+    }
+    div.innerHTML = '<div>' + (isReply ? '└ ' : '') + (cm.userInfo.nickname || '-')
+      + ' <span class="tag">' + (RANK[cm.userInfo.jjandolRank] || '-') + '</span></div>'
+      + '<div>' + cm.commentInfo.content + '</div>'
+      + '<div class="muted">' + timeAgo(cm.commentInfo.createdAt)
+      + ' · id ' + cm.commentId + '</div>';
+
+    var actions = document.createElement('div');
+    if (!isReply) {
+      var reply = document.createElement('button');
+      reply.textContent = '답글';
+      reply.onclick = function () { writeComment(cm.commentId); };
+      actions.appendChild(reply);
+    }
+    var del = document.createElement('button');
+    del.textContent = '삭제';
+    del.onclick = function () { removeComment(cm.commentId); };
+    actions.appendChild(del);
+    div.appendChild(actions);
+
+    return div;
+  }
+
+  async function writeComment(parentCommentId) {
+    var content = prompt(parentCommentId ? '대댓글 내용' : '댓글 내용');
+    if (content === null) return;
+    var body = { content: content };
+    if (parentCommentId) body.parentCommentId = parentCommentId;
+
+    var r = await api('POST', '/api/v1/deal-posts/' + detailId + '/comments', JSON.stringify(body));
+    if (!r.ok) { alert(r.json ? r.json.message : '작성 실패'); return; }
+    openDetail(detailId);
+  }
+
+  async function removeComment(commentId) {
+    var r = await api('DELETE', '/api/v1/deal-posts/' + detailId + '/comments/' + commentId);
+    if (!r.ok) { alert(r.json ? r.json.message : '삭제 실패'); return; }
+    openDetail(detailId);
   }
 
   function openPurchaseLink() {

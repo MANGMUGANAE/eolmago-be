@@ -21,6 +21,10 @@ public enum ErrorCode {
     INVALID_SEARCH_KEYWORD_MAXIMUM(400, "INVALID_SEARCH_KEYWORD_MAXIMUM", "검색어는 15자 이하로 입력해주세요."),
     INVALID_SEARCH_KEYWORD(400, "INVALID_SEARCH_KEYWORD", "검색어에 '대학', '대학교', '학교'는 단독으로 사용할 수 없습니다."),
 
+    // 400 Bad Request 댓글 관련 에러코드
+    COMMENT_CONTENT_REQUIRED(400, "COMMENT_CONTENT_REQUIRED", "댓글 내용을 입력해주세요."),
+    COMMENT_REPLY_DEPTH_EXCEEDED(400, "COMMENT_REPLY_DEPTH_EXCEEDED", "대댓글에는 답글을 달 수 없습니다."),
+
     // 400 Bad Request 핫딜 관련 에러코드
     INVALID_DEAL_POST_SORT_TYPE(400, "INVALID_DEAL_POST_SORT_TYPE", "정렬 조건이 올바르지 않습니다. latest, price, grade 중 하나를 사용해주세요."),
 

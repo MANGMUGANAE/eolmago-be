@@ -33,6 +33,16 @@ public interface DealPostRepository extends JpaRepository<DealPost, Long> {
   @Query("update DealPost d set d.dislikeCount = d.dislikeCount - 1 where d = :d")
   void decreaseDisLikeCount(@Param("d") DealPost dealPost);
 
+  @Modifying(flushAutomatically = true)
+  @Query("update DealPost d set d.commentCount = d.commentCount + 1 where d = :d")
+  void increaseCommentCount(@Param("d") DealPost dealPost);
+
+  @Modifying(flushAutomatically = true)
+  @Query("update DealPost d set d.commentCount = "
+      + "case when d.commentCount - :count < 0 then 0 else d.commentCount - :count end "
+      + "where d = :d")
+  void decreaseCommentCount(@Param("d") DealPost dealPost, @Param("count") int count);
+
 
   @Query(value = """
       select dealPost from DealPost dealPost
