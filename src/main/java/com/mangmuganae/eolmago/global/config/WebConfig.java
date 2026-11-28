@@ -19,7 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
         .allowedOrigins(
             "http://localhost:8080",
             "http://localhost:5173",
-            "https://eolamgo.co.kr"
+            "https://eolmago.co.kr"
         )
         .allowCredentials(true)
         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
