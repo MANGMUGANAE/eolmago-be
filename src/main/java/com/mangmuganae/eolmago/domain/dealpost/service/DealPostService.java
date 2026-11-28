@@ -267,9 +267,7 @@ public class DealPostService {
 
     User user = findUserByUuid(uuid);
 
-    DealPost dealPost = dealPostRepository.findById(dealPostId).orElseThrow(
-        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
-    );
+    DealPost dealPost = findNotDeletedDealPost(dealPostId);
 
     if (!dealPost.isOwnedBy(user)) {
       throw new DealPostAccessDeniedException(ErrorCode.ACCESS_DENIED);
@@ -370,19 +368,20 @@ public class DealPostService {
 
   }
 
-  public DealPostDetailResponseDto getDealPostDetailById(Long dealPostId) {
+  public DealPostDetailResponseDto getDealPostDetailById(Long dealPostId, String uuid) {
 
-    DealPost dealPost = dealPostRepository.findById(dealPostId).orElseThrow(
-        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
-    );
+    DealPost dealPost = findNotDeletedDealPost(dealPostId);
 
     User user = dealPost.getUser();
+    User checkUser = userRepository.findByUuid(uuid).orElseThrow(
+        () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND)
+    );
 
     List<Comment> comments = commentRepository.findByDealPost(dealPost);
 
     ReactionType reactionType;
 
-    DealPostReaction dealPostReaction = dealPostReactionRepository.findByUserAndDealPost(user, dealPost).orElse(null);
+    DealPostReaction dealPostReaction = dealPostReactionRepository.findByUserAndDealPost(checkUser, dealPost).orElse(null);
     if (dealPostReaction == null) {
       reactionType = ReactionType.NONE;
     } else {
@@ -400,9 +399,7 @@ public class DealPostService {
         () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND)
     );
 
-    DealPost dealPost = dealPostRepository.findById(dealPostId).orElseThrow(
-        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
-    );
+    DealPost dealPost = findNotDeletedDealPost(dealPostId);
 
     if (dealPost.getLikeCount() < 0) {
       dealPost.initLikeReaction();
@@ -448,9 +445,7 @@ public class DealPostService {
         () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND)
     );
 
-    DealPost dealPost = dealPostRepository.findById(dealPostId).orElseThrow(
-        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
-    );
+    DealPost dealPost = findNotDeletedDealPost(dealPostId);
 
     DealPostReaction dealPostReaction = dealPostReactionRepository.findByUserAndDealPost(user, dealPost).orElse(null);
 
@@ -506,6 +501,33 @@ public class DealPostService {
 
     return DealPostReactionResponse
         .of(reactionType, reloaded.getLikeCount(), reloaded.getDislikeCount());
+  }
+
+  @Transactional
+  public void delete(Long dealPostId, String uuid) {
+
+    User user = findUserByUuid(uuid);
+
+    DealPost dealPost = findNotDeletedDealPost(dealPostId);
+
+    if (!dealPost.isOwnedBy(user)) {
+      throw new DealPostAccessDeniedException(ErrorCode.ACCESS_DENIED);
+    }
+
+    dealPost.delete();
+  }
+
+  private DealPost findNotDeletedDealPost(Long dealPostId) {
+
+    DealPost dealPost = dealPostRepository.findById(dealPostId).orElseThrow(
+        () -> new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND)
+    );
+
+    if (dealPost.isDeleted()) {
+      throw new DealPostNotFoundException(ErrorCode.POST_NOT_FOUND);
+    }
+
+    return dealPost;
   }
 
   public long calculateDealReliabilityScore(User user, DealPost dealPost) {

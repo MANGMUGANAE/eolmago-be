@@ -259,6 +259,100 @@ public interface DealPostControllerSpecification {
 
 
   @Operation(
+      summary = "핫딜 글 삭제",
+      description = """
+          본인이 올린 핫딜 글을 삭제합니다. 행을 지우지 않고 삭제 여부만 Y 로 바꾸는 소프트 삭제입니다.
+
+          삭제된 글은 목록 조회와 상세 조회에서 모두 빠지며, 상세 조회 시 404 로 응답됩니다.
+          이미 삭제된 글을 다시 삭제하려 해도 404 로 응답됩니다.
+
+          추천 수, 비추천 수, 댓글 수, 핫딜 신뢰도 점수와 작성자의 글 수는 그대로 유지됩니다.
+          삭제를 이용해 신뢰도를 되돌릴 수 없도록 하기 위한 동작입니다.
+
+          응답 본문에 data 는 없습니다.
+          """,
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER, name = "Authorization", description = "Bearer 액세스 토큰",
+              required = true, example = "Bearer eyJhbGciOiJIUzI1NiJ9..."),
+          @Parameter(in = ParameterIn.PATH, name = "dealPostId", description = "삭제할 핫딜 글 ID",
+              required = true, example = "12")
+      })
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "핫딜 글 삭제 성공",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "SuccessExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 200,
+                        "statusCode": "SUCCESS",
+                        "message": "핫딜 글 삭제에 성공하였습니다.",
+                        "data": null
+                      }
+                      """
+              ))),
+      @ApiResponse(responseCode = "401", description = "액세스 토큰이 없거나 유효하지 않음 (본문 responseCode 는 커스텀 코드 1001)",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "AccessTokenInvalidExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 1001,
+                        "statusCode": "ACCESS_TOKEN_INVALID",
+                        "message": "엑세스 토큰이 유효하지 않습니다.",
+                        "data": null
+                      }
+                      """
+              ))),
+      @ApiResponse(responseCode = "403", description = "본인이 올린 글이 아님",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "AccessDeniedExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 403,
+                        "statusCode": "ACCESS_DENIED",
+                        "message": "이 기능에 접근할 수 없습니다.",
+                        "data": null
+                      }
+                      """
+              ))),
+      @ApiResponse(responseCode = "404", description = "핫딜 글이 없거나 이미 삭제됨",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "PostNotFoundExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 404,
+                        "statusCode": "POST_NOT_FOUND",
+                        "message": "해당 게시글을 찾을 수 없습니다.",
+                        "data": null
+                      }
+                      """
+              ))),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+          content = @Content(schema = @Schema(implementation = ResponseDTO.class),
+              examples = @ExampleObject(
+                  name = "InternalServerErrorExample",
+                  value = """
+                      {
+                        "localDateTime": "2026-11-28T15:30:00.123",
+                        "responseCode": 500,
+                        "statusCode": "INTERNAL_SERVER_ERROR",
+                        "message": "서버 내부 오류가 발생했습니다.",
+                        "data": null
+                      }
+                      """
+              )))
+  })
+  ResponseDTO<?> deleteDealPost(Long dealPostId, CustomUserDetails userDetails);
+
+
+  @Operation(
       summary = "핫딜 상세 조회",
       description = """
           핫딜 글 한 건의 상세 정보와 댓글 목록을 조회합니다.
@@ -278,6 +372,7 @@ public interface DealPostControllerSpecification {
           댓글이 없으면 comments 는 빈 배열이고 commentCount 는 0 입니다.
 
           상태와 무관하게 조회되므로 검증 전(HOLD) 이나 종료(ENDED) 된 글도 ID 를 알면 조회됩니다.
+          단, 삭제된 글은 404 로 응답됩니다.
           조회해도 viewCount 는 증가하지 않습니다.
           """,
       parameters = {
@@ -398,13 +493,13 @@ public interface DealPostControllerSpecification {
                       """
               )))
   })
-  ResponseDTO<DealPostDetailResponseDto> getDealPostDetailById(Long dealPostId);
+  ResponseDTO<DealPostDetailResponseDto> getDealPostDetailById(Long dealPostId, CustomUserDetails userDetails);
 
   @Operation(
       summary = "핫딜 목록 조회",
       description = """
           조건에 맞는 핫딜 목록을 페이지 단위로 조회합니다.
-          검증을 통과하지 않은 글(HOLD)과 운영자가 거절한 글(REJECTED)은 조회되지 않습니다.
+          검증을 통과하지 않은 글(HOLD)과 운영자가 거절한 글(REJECTED), 삭제된 글은 조회되지 않습니다.
 
           ended 는 종료된 핫딜을 제외할지 여부입니다.
           기본값 false 면 진행중(ACTIVE) 과 종료(ENDED) 를 전부 조회하고, true 면 진행중만 조회합니다.

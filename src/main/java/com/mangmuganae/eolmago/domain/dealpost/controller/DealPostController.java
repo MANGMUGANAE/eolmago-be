@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,10 +57,25 @@ public class DealPostController implements DealPostControllerSpecification {
 
 
   @Override
-  @GetMapping("/{dealPostId}")
-  public ResponseDTO<DealPostDetailResponseDto> getDealPostDetailById(@PathVariable Long dealPostId) {
+  @DeleteMapping("/{dealPostId}")
+  public ResponseDTO<?> deleteDealPost(
+      @PathVariable Long dealPostId,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-    DealPostDetailResponseDto dealPostDetailResponseDto = dealPostService.getDealPostDetailById(dealPostId);
+    String uuid = userDetails.getUuid();
+
+    dealPostService.delete(dealPostId, uuid);
+
+    return ResponseDTO.of("핫딜 글 삭제에 성공하였습니다.");
+  }
+
+  @Override
+  @GetMapping("/{dealPostId}")
+  public ResponseDTO<DealPostDetailResponseDto> getDealPostDetailById(
+      @PathVariable Long dealPostId,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+    DealPostDetailResponseDto dealPostDetailResponseDto = dealPostService.getDealPostDetailById(dealPostId, userDetails.getUuid());
     return ResponseDTO.of(dealPostDetailResponseDto, "조회에 성공하였습니다.");
   }
 

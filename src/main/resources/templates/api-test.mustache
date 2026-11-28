@@ -220,6 +220,7 @@
       <div class="row" style="margin-top:8px">
         <button class="wide fill" onclick="openPurchaseLink()">구매하러 가기</button>
         <button class="off">담기</button>
+        <button onclick="deleteDealPost()">글 삭제</button>
       </div>
     </div>
     <div class="sec">댓글 <span id="d-commentcount"></span></div>
@@ -598,6 +599,14 @@
     var r = await api('DELETE', '/api/v1/deal-posts/' + detailId + '/comments/' + commentId);
     if (!r.ok) { alert(r.json ? r.json.message : '삭제 실패'); return; }
     openDetail(detailId);
+  }
+
+  async function deleteDealPost() {
+    if (!detailId) return;
+    var r = await api('DELETE', '/api/v1/deal-posts/' + detailId);
+    if (!r.ok) { alert(r.json ? r.json.message : '삭제 실패'); return; }
+    go('home');
+    loadDeals();
   }
 
   function openPurchaseLink() {

@@ -48,7 +48,8 @@ public interface DealPostRepository extends JpaRepository<DealPost, Long> {
       select dealPost from DealPost dealPost
       left join fetch dealPost.store
       left join fetch dealPost.user uploader
-      where dealPost.dealPostStatus in :statuses
+      where (dealPost.deleteYn is null or dealPost.deleteYn = 'N')
+        and dealPost.dealPostStatus in :statuses
         and (:categoryId is null or dealPost.category.id = :categoryId)
         and (:keyword is null or dealPost.productName like concat('%', :keyword, '%'))
         and (:hotDealOnly = false
@@ -58,7 +59,8 @@ public interface DealPostRepository extends JpaRepository<DealPost, Long> {
       countQuery = """
       select count(dealPost) from DealPost dealPost
       left join dealPost.user uploader
-      where dealPost.dealPostStatus in :statuses
+      where (dealPost.deleteYn is null or dealPost.deleteYn = 'N')
+        and dealPost.dealPostStatus in :statuses
         and (:categoryId is null or dealPost.category.id = :categoryId)
         and (:keyword is null or dealPost.productName like concat('%', :keyword, '%'))
         and (:hotDealOnly = false
